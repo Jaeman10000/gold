@@ -121,7 +121,21 @@
 - ✅ 비주얼 컨셉 확정: 금색 통일 광산, HUD, 엠블럼 9종, 분리 에셋(배경/광맥/금더미/수레/일꾼)
 - ✅ 성향 = 글씨 표시로 결정(색 스킨은 v2)
 - ✅ 홈 확정: 수익률 패널 + 개별주 상위3 미리보기 + 펼침(전체) + **KR/US 시장 토글**(같은 씬, 데이터·등급·통화 전환)
-- ⬜ 코드 미착수 — **다음: v1 스캐폴드**
+- ✅ **Phase 1 스캐폴드 완료 (2026-06-17)** — `backend/`(FastAPI+SQLAlchemy+SQLite, Python 3.12, **포트 8002**) + `frontend/`(React+Vite, proxy `/api`→8002).
+  - 3화면(광산/금고/측량소) MOCK 동작. 하단 독 5칸(탐사·연구소는 v2 비활성).
+  - 데이터 추상화: `app/data/provider.py`(인터페이스) → `mock_provider.py`(KR 실데이터 형태, US=locked) / `kiwoom_client.py`(stub).
+  - 수익률·평단 계산은 `app/services/portfolio_service.py` 한 곳. 모든 응답에 `market`/`currency`/`currencySymbol`, 분석 응답에 `disclaimer`("투자권유 아님").
+  - US = `{status:"locked"}` → 프론트 잠금 UI(디밍 + "준비 중").
+- ✅ **Phase 2 완료 (2026-06-18)** — 키움 실연동 + 프론트 실데이터 연결
+  - 토큰 자동 발급·갱신 (`/oauth2/token`, `secretkey` 파라미터, 응답 `token` 필드).
+  - **kt00018 잔고** (`dmst_stex_tp="NXT"` 유효값 발견, KRX 불가). 보유 3종목 실계좌 확인.
+  - **kt00009 체결내역** (최근 2개월, 필수 파라미터: `qry_tp/strt_dt/end_dt/dmst_stex_tp/stk_bond_tp/mrkt_tp/sell_tp`). 빈 결과 정상 처리.
+  - **ka10073 기간별실현손익** (`dt_stk_rlzt_pl` 응답 키). vault 응답에 `realizedPnl` 필드 추가.
+  - **CSV 임포트** `POST /api/import/trades`, `POST /api/import/dividends` — 과거 데이터 보완용.
+  - **금액 표기**: KR=₩4,540,000 (콤마 풀숫자) / US=$4,540.00 (소수점 2자리). frontend+backend 동일 규칙.
+  - **금괴더미 크기**: 평가금액 기준 (1천만/1억 임계). 프론트 실데이터 전 화면 연결.
+  - vault 서브라우트 `GET /api/vault/trades`, `/api/vault/dividends` 추가.
+- ⬜ **다음: Phase 3 — 측량소(미래정합성) + 탐사(what-if) + US 실데이터**
 
 ## 11. 빌드 계획 — 다음 작업 (Claude Code)
 **Phase 1 (스캐폴드)**
