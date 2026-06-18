@@ -705,6 +705,21 @@ def build_disposition_info(holdings: list, account: dict | None) -> dict:
     }
 
 
+def compute_ticker_fund_score(
+    ticker: str, market: str, provider: DataProvider
+) -> float | None:
+    """단일 종목 fund 점수 — 탐사 케이스B(신규 종목) 전용.
+
+    trust는 포트폴리오 내 상대 백분위가 필요하므로 단일 종목일 때 N/A(재정규화).
+    실행 시간: DART + ka10059 각 1회 호출 (~5~15초).
+    """
+    from app.data.dart_client import get_financial_scores
+    health_map = get_financial_scores([ticker])
+    supply_raw = provider.get_supply_scores([ticker], market, days=20)
+    # trust는 N/A — 단일 종목 백분위 계산 불가
+    return _calc_fund(health_map.get(ticker), supply_raw.get(ticker), None)
+
+
 def _empty_response(mode: str, themes: list[dict] | None) -> dict:
     if mode == "theme" and themes:
         labels = [t.get("label", "") for t in themes]

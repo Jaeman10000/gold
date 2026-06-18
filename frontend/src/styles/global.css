@@ -711,3 +711,119 @@ body {
 .dock-icon { font-size: 20px; }
 .dock-label { font-size: 11px; font-weight: 600; }
 .dock-soon { position: absolute; top: 2px; right: 18px; font-size: 8px; background: var(--gold-deep); color: #1a1206; padding: 1px 4px; border-radius: 4px; }
+
+/* ========== 탐사(what-if) 화면 ========== */
+.explore-screen { display: flex; flex-direction: column; height: 100%; }
+.explore-badge { font-size: 11px; background: rgba(232,179,57,.18); color: var(--gold); padding: 2px 8px; border-radius: 6px; font-weight: 600; }
+.explore-body { padding: 12px 14px 90px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; flex: 1; }
+
+/* 고정 문구 */
+.explore-disclaimer-top {
+  text-align: center; font-size: 11px; color: var(--gold); font-weight: 600;
+  background: rgba(232,179,57,.08); border: 1px solid rgba(232,179,57,.2);
+  border-radius: 8px; padding: 6px 12px;
+}
+.explore-disclaimer-bottom { font-size: 10px; color: var(--text-dim); text-align: center; line-height: 1.5; }
+
+/* 검색 */
+.explore-search-note { font-size: 11px; color: var(--text-dim); margin-bottom: 10px; }
+.explore-input-row { display: flex; align-items: center; gap: 8px; }
+.explore-input {
+  flex: 1; background: var(--bg-2); border: 1px solid var(--line);
+  border-radius: 10px; padding: 11px 14px; font-size: 15px; color: var(--text);
+  outline: none;
+}
+.explore-input:focus { border-color: var(--gold); }
+.explore-clear-btn {
+  background: rgba(226,101,92,.15); border: 1px solid rgba(226,101,92,.3);
+  color: var(--loss); border-radius: 8px; padding: 8px 10px; font-size: 13px; cursor: pointer;
+}
+
+/* 드롭다운 */
+.explore-dropdown {
+  border: 1px solid var(--line); border-radius: 10px; overflow: hidden;
+  margin-top: 6px; background: var(--bg-2);
+}
+.explore-drop-item {
+  display: flex; align-items: center; justify-content: space-between;
+  width: 100%; padding: 11px 14px; background: none; border: none;
+  border-bottom: 1px solid var(--line); cursor: pointer; text-align: left;
+  gap: 8px;
+}
+.explore-drop-item:last-child { border-bottom: none; }
+.explore-drop-item:hover { background: rgba(232,179,57,.07); }
+.explore-drop-item.loading, .explore-drop-item.empty { color: var(--text-dim); font-size: 13px; cursor: default; justify-content: flex-start; }
+.drop-name { font-size: 14px; font-weight: 600; color: var(--text); flex: 1; }
+.drop-ticker { font-size: 12px; color: var(--text-dim); font-family: monospace; flex-shrink: 0; }
+
+/* 선택 확인 칩 */
+.explore-selected-chip {
+  display: inline-flex; align-items: center; gap: 8px;
+  margin-top: 10px; padding: 7px 14px; border-radius: 999px;
+  background: rgba(76,198,106,.12); border: 1px solid rgba(76,198,106,.3);
+}
+.esc-name { font-size: 14px; font-weight: 700; color: var(--text); }
+.esc-ticker { font-size: 12px; color: var(--text-dim); font-family: monospace; }
+
+/* 비중 슬라이더 */
+.explore-weight-row { display: flex; align-items: center; gap: 12px; margin: 10px 0 4px; }
+.explore-slider { flex: 1; accent-color: var(--gold); }
+.explore-weight-val { font-size: 24px; font-weight: 900; color: var(--gold-bright); min-width: 46px; text-align: right; }
+.explore-weight-note { font-size: 12px; color: var(--text-dim); margin-bottom: 14px; }
+.explore-sim-btn {
+  width: 100%; padding: 14px; border-radius: 12px;
+  background: var(--gold); color: #1a1206; font-size: 16px; font-weight: 800;
+  border: none; cursor: pointer;
+}
+.explore-sim-btn:disabled { opacity: .55; cursor: default; }
+
+/* 시뮬 중 */
+.explore-simulating {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  padding: 28px 0; color: var(--text-dim); font-size: 13px;
+}
+.sim-spinner {
+  width: 32px; height: 32px; border-radius: 50%;
+  border: 3px solid rgba(232,179,57,.18); border-top-color: var(--gold);
+  animation: spin .75s linear infinite;
+}
+.sim-sub { font-size: 11px; color: var(--text-dim); opacity: .7; }
+
+/* 결과 카드 */
+.explore-stock-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 0; border-bottom: 1px solid var(--line); font-size: 13px;
+}
+.explore-stock-row:last-of-type { border-bottom: none; margin-bottom: 12px; }
+.esr-label { color: var(--text-dim); min-width: 70px; font-size: 12px; }
+.esr-name { font-weight: 700; flex: 1; }
+.esr-ticker { font-family: monospace; font-size: 12px; color: var(--text-dim); }
+.esr-new-badge { font-size: 10px; background: rgba(232,179,57,.2); color: var(--gold); padding: 2px 6px; border-radius: 6px; font-weight: 700; }
+.esr-val { font-weight: 700; color: var(--gold-bright); }
+.esr-na { font-size: 11px; color: var(--text-dim); }
+
+/* 점수 비교 */
+.explore-score-compare {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 8px; padding: 14px 0 4px; margin-bottom: 10px;
+}
+.esc-col { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; }
+.esc-label { font-size: 11px; color: var(--text-dim); }
+.esc-grade { font-size: 15px; font-weight: 700; color: var(--text); text-align: center; }
+.esc-grade.sim.pos { color: var(--profit); }
+.esc-grade.sim.neg { color: var(--loss); }
+.esc-arrow { display: flex; flex-direction: column; align-items: center; }
+.esc-delta { font-size: 20px; font-weight: 900; }
+.esc-delta.pos { color: var(--profit); }
+.esc-delta.neg { color: var(--loss); }
+.esc-delta.flat { color: var(--text-dim); }
+
+.explore-change-desc { font-size: 13px; color: var(--text); margin-bottom: 8px; }
+.explore-sim-note {
+  font-size: 12px; color: var(--text-dim);
+  background: rgba(232,179,57,.06); border-left: 3px solid var(--gold-deep);
+  padding: 8px 10px; border-radius: 0 6px 6px 0; line-height: 1.5; margin-bottom: 6px;
+}
+.explore-trust-note { font-size: 11px; color: var(--text-dim); opacity: .75; line-height: 1.4; }
+.explore-case-note { font-size: 11px; color: var(--text-dim); text-align: center; }
+.explore-error { color: var(--loss); text-align: center; padding: 16px; font-size: 13px; }

@@ -26,6 +26,7 @@ logger = logging.getLogger(__name__)
 _DART_BASE = "https://opendart.fss.or.kr/api"
 _CORP_CODES_PATH = Path(__file__).parents[2] / "data" / "corp_codes.json"
 _INDUTY_CODES_PATH = Path(__file__).parents[2] / "data" / "induty_codes.json"
+_NAME_MAP_PATH = Path(__file__).parents[2] / "data" / "name_map.json"
 
 _ticker_map: dict[str, str] = {}
 _map_loaded = False
@@ -33,9 +34,54 @@ _map_loaded = False
 _induty_cache: dict[str, str] = {}
 _induty_loaded = False
 
+_name_map: dict[str, str] = {}  # ticker → 종목명
+_name_loaded = False
+
 
 def _corp_codes_available() -> bool:
     return bool(settings.dart_api_key)
+
+
+def _load_name_map() -> None:
+    global _name_map, _name_loaded
+    if _name_loaded:
+        return
+    if _NAME_MAP_PATH.exists():
+        try:
+            with open(_NAME_MAP_PATH, encoding="utf-8") as f:
+                _name_map = json.load(f)
+            logger.info("name_map 로드: %d 종목", len(_name_map))
+        except Exception as e:
+            logger.warning("name_map.json 로드 실패: %s", e)
+    _name_loaded = True
+
+
+def search_stocks(query: str, limit: int = 12) -> list[dict]:
+    """종목명 또는 6자리 코드로 검색 → [{ticker, name}] 반환.
+
+    하드룰: 인기·추천 기준 없음. 사용자 입력 글자 매칭만. 이름+코드만 반환.
+    name_map.json 없으면 [] 반환 (DART 업데이트 후 사용 가능).
+    """
+    if not query or not query.strip():
+        return []
+    q = query.strip()
+
+    _load_name_map()
+
+    # 6자리 숫자 코드 직접 입력 → 정확히 일치하는 1건
+    if q.isdigit() and len(q) == 6:
+        name = _name_map.get(q) or ""
+        return [{"ticker": q, "name": name}] if (name or True) else []
+
+    # 이름 부분 일치 (대소문자 무관)
+    q_lower = q.lower()
+    results: list[dict] = []
+    for ticker, name in _name_map.items():
+        if q_lower in name.lower():
+            results.append({"ticker": ticker, "name": name})
+        if len(results) >= limit:
+            break
+    return results
 
 
 def _load_ticker_map() -> None:
@@ -71,19 +117,28 @@ def update_corp_code_cache() -> int:
         import xml.etree.ElementTree as ET
         root = ET.fromstring(xml_bytes)
         mapping: dict[str, str] = {}
+        name_mapping: dict[str, str] = {}
         for corp in root.findall("list"):
             stock_code = (corp.findtext("stock_code") or "").strip()
             corp_code = (corp.findtext("corp_code") or "").strip()
+            corp_name = (corp.findtext("corp_name") or "").strip()
             if stock_code and corp_code:
                 mapping[stock_code] = corp_code
+                if corp_name:
+                    name_mapping[stock_code] = corp_name
 
         _CORP_CODES_PATH.parent.mkdir(parents=True, exist_ok=True)
         with open(_CORP_CODES_PATH, "w", encoding="utf-8") as f:
             json.dump(mapping, f, ensure_ascii=False)
+        with open(_NAME_MAP_PATH, "w", encoding="utf-8") as f:
+            json.dump(name_mapping, f, ensure_ascii=False)
 
         _ticker_map = mapping
         _map_loaded = True
-        logger.info("corp_code 캐시 갱신 완료: %d 종목", len(mapping))
+        global _name_map, _name_loaded
+        _name_map = name_mapping
+        _name_loaded = True
+        logger.info("corp_code 캐시 갱신 완료: %d 종목, %d 이름", len(mapping), len(name_mapping))
         return len(mapping)
     except Exception as e:
         logger.error("corp_code 캐시 갱신 실패: %s", e)

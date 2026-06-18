@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
 from app.db import init_db
-from app.routers import import_router, portfolio, survey, vault
+from app.routers import explore, import_router, portfolio, survey, vault
 
 logger = logging.getLogger(__name__)
 
@@ -27,6 +27,7 @@ app.include_router(portfolio.router)
 app.include_router(vault.router)
 app.include_router(survey.router)
 app.include_router(import_router.router)
+app.include_router(explore.router)
 
 
 @app.on_event("startup")

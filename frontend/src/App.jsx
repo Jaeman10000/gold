@@ -5,9 +5,10 @@ import BottomDock from './components/BottomDock'
 import MineHome from './screens/MineHome'
 import Vault from './screens/Vault'
 import Survey from './screens/Survey'
+import Explore from './screens/Explore'
 import LoadingMascot from './components/LoadingMascot'
 
-const SCREENS = { mine: MineHome, vault: Vault, survey: Survey }
+const SCREENS = { mine: MineHome, vault: Vault, survey: Survey, explore: Explore }
 
 function AppInner() {
   const [active, setActive] = useState('mine')

@@ -3,7 +3,7 @@ const ITEMS = [
   { key: 'mine', label: '광산', icon: '⛏️', enabled: true },
   { key: 'vault', label: '금고', icon: '🏰', enabled: true },
   { key: 'survey', label: '측량소', icon: '📐', enabled: true },
-  { key: 'explore', label: '탐사', icon: '🧭', enabled: false },
+  { key: 'explore', label: '탐사', icon: '🧭', enabled: true },
   { key: 'lab', label: '연구소', icon: '🔬', enabled: false },
 ]
 
