@@ -10,6 +10,9 @@ class Settings(BaseSettings):
     kiwoom_app_secret: str = ""
     kiwoom_use_mock: bool = False  # True = mockapi.kiwoom.com (모의투자)
 
+    # DART (Phase 3 재무 데이터). opendart.fss.or.kr 에서 무료 발급.
+    dart_api_key: str = ""
+
     # DB
     database_url: str = "sqlite:///./data.db"
 

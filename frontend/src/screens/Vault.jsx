@@ -1,14 +1,15 @@
 // 금고 — 매매·배당 자동기록 장부 + 현재 시장 전종목 (CLAUDE.md §7). v1 핵심.
-import { api } from '../api/client'
-import { useApi } from '../hooks/useApi'
+import { useScreenData, useDataStore } from '../store/dataStore'
 import { useMarket } from '../store/marketStore'
 import MarketToggle from '../components/MarketToggle'
 import LockedOverlay from '../components/LockedOverlay'
+import LoadingMascot from '../components/LoadingMascot'
 import { money } from '../utils/format'
 
 export default function Vault() {
   const { market } = useMarket()
-  const { data, loading, error } = useApi(api.vault, market)
+  const { data, loading, refreshing, error } = useScreenData('vault', market)
+  const { refresh } = useDataStore()
   const locked = data?.status === 'locked'
   const symbol = data?.currencySymbol || '₩'
 
@@ -16,11 +17,21 @@ export default function Vault() {
     <div className="screen vault">
       <header className="screen-header">
         <h2>금고 · 장부</h2>
-        <MarketToggle />
+        <div className="header-right">
+          <button
+            className="refresh-btn"
+            onClick={() => refresh(market)}
+            disabled={refreshing}
+            title="새로고침"
+          >
+            <span className={refreshing ? 'refresh-icon spinning' : 'refresh-icon'}>↺</span>
+          </button>
+          <MarketToggle />
+        </div>
       </header>
 
-      {loading && <div className="center-msg">불러오는 중…</div>}
-      {error && <div className="center-msg err">백엔드 연결 실패: {error}</div>}
+      {loading && !data && <LoadingMascot text="금고를 열고 있는 중…" />}
+      {error && !data && <div className="center-msg err">백엔드 연결 실패: {error}</div>}
       {locked && <LockedOverlay reason={data.reason} />}
 
       {!loading && !locked && data && (

@@ -114,6 +114,55 @@ def debug_kiwoom_raw(qry_tp: str = "1", dmst_stex_tp: str = "KRX") -> dict:
     return p.raw_kt00018(qry_tp=qry_tp, dmst_stex_tp=dmst_stex_tp)
 
 
+@app.get("/api/debug/kiwoom/themes")
+def debug_kiwoom_themes() -> dict:
+    """ka90001 테마그룹 목록 원시 응답 — 경로·필드명 검증용 (DEV 전용)."""
+    from app.data.provider import get_provider
+    from app.data.kiwoom_client import KiwoomClient
+    p = get_provider()
+    if not isinstance(p, KiwoomClient):
+        return {"error": "DATA_PROVIDER=kiwoom 일 때만 사용 가능"}
+    try:
+        return p._call_api("/api/dostk/thema", "ka90001", {})
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@app.get("/api/debug/kiwoom/supply/{ticker}")
+def debug_kiwoom_supply(ticker: str) -> dict:
+    """ka10059 종목별투자자 원시 응답 — 경로·필드명 검증용 (DEV 전용)."""
+    from datetime import date
+    from app.data.provider import get_provider
+    from app.data.kiwoom_client import KiwoomClient
+    p = get_provider()
+    if not isinstance(p, KiwoomClient):
+        return {"error": "DATA_PROVIDER=kiwoom 일 때만 사용 가능"}
+    try:
+        return p._call_api(
+            "/api/dostk/stkinfo",
+            "ka10059",
+            {
+                "stk_cd": ticker,
+                "dt": date.today().strftime("%Y%m%d"),
+                "amt_qty_tp": "1",
+                "trde_tp": "0",
+                "unit_tp": "1",
+            },
+        )
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@app.post("/api/admin/dart/update")
+def admin_dart_update() -> dict:
+    """DART corpCode.xml 갱신 — DART_API_KEY 등록 후 1회 실행 (DEV 전용)."""
+    from app.data.dart_client import update_corp_code_cache
+    count = update_corp_code_cache()
+    if count:
+        return {"status": "ok", "corp_count": count}
+    return {"status": "error", "msg": "DART_API_KEY 미설정이거나 다운로드 실패"}
+
+
 @app.get("/api/health")
 def health() -> dict:
     """서버 상태 + provider 상태 (토큰 유효 여부 포함).

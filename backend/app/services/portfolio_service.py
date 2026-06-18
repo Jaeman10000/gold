@@ -61,7 +61,20 @@ def build_portfolio(market: str, pending_override: int | None = None) -> dict:
 
     # 평가금액 내림차순 정렬 → 홈 미리보기 상위 3
     holdings.sort(key=lambda h: h["evalAmount"], reverse=True)
-    score = scoring_service.vein_score(market)
+
+    # 활성 모드(기본/테마)에 맞는 광맥 등급·레이블
+    from app.services.survey_service import get_user_themes
+    user_themes = get_user_themes(market)
+    is_theme = bool(user_themes)
+    score = scoring_service.vein_score(
+        market,
+        mode="theme" if is_theme else "basic",
+        themes=user_themes or None,
+    )
+    if is_theme:
+        vein_label = f"AI테마 {scoring_service.grade_of(score)}"
+    else:
+        vein_label = f"{'US 광맥' if market == 'US' else '광맥'} {scoring_service.grade_of(score)}"
 
     return {
         "status": "ok",
@@ -69,7 +82,7 @@ def build_portfolio(market: str, pending_override: int | None = None) -> dict:
         "currency": cur["currency"],
         "currencySymbol": cur["symbol"],
         "veinGrade": {
-            "label": f"{'US 광맥' if market == 'US' else '광맥'} {scoring_service.grade_of(score)}",
+            "label": vein_label,
             "score": score,
         },
         "disposition": scoring_service.disposition(market),  # 글씨 표시 (색 아님)

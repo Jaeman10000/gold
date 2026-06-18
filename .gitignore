@@ -37,3 +37,12 @@ Thumbs.db
 *.pem
 *.key
 secrets/
+
+# Logs
+*.log
+
+# Dev screenshots / scratch (검증용 일회성 산출물)
+ss_*.png
+screenshot_*.png
+*_shot.mjs
+*_shot.cjs

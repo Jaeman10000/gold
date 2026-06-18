@@ -25,3 +25,30 @@ class MockProvider(DataProvider):
         if market == "KR":
             return [dict(d) for d in mock_data.KR_DIVIDENDS]
         return []
+
+    def get_theme_index(self, market: str) -> dict[str, list[str]]:
+        if market != "KR":
+            return {}
+        # mock 종목들의 키움 테마명 (실제 키움 테마명과 유사하게 작성)
+        return {
+            "005930": ["AI반도체", "반도체"],           # 삼성전자
+            "000660": ["AI반도체", "HBM", "반도체"],    # SK하이닉스
+            "005380": ["로봇", "전기차"],               # 현대차
+            "105560": [],                               # KB금융 (성장테마 없음)
+            "006400": ["2차전지", "배터리"],            # 삼성SDI
+        }
+
+    def get_supply_scores(
+        self, tickers: list[str], market: str, days: int = 20
+    ) -> dict[str, float]:
+        if market != "KR":
+            return {}
+        # 예시 수급 점수 (0~100)
+        _mock = {
+            "005930": 62.0,
+            "000660": 78.0,
+            "005380": 55.0,
+            "105560": 48.0,
+            "006400": 41.0,
+        }
+        return {t: _mock[t] for t in tickers if t in _mock}

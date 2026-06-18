@@ -48,3 +48,18 @@ class Dividend(Base):
     ticker: Mapped[str] = mapped_column(String)
     name: Mapped[str] = mapped_column(String)
     amount: Mapped[float] = mapped_column(Float)  # 세후 입금액
+
+
+class UserTheme(Base):
+    """사용자 테마 설정 — 측량소 테마 모드 영속 저장.
+
+    market 별 1행 (KR/US 분리 — CLAUDE.md §5).
+    themes_json = JSON 배열: ["AI·반도체", "로봇"]
+    비어있으면 기본 모드(펀더멘털 스냅샷).
+    """
+
+    __tablename__ = "user_themes"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    market: Mapped[str] = mapped_column(String, unique=True, index=True)
+    themes_json: Mapped[str] = mapped_column(String, default="[]")

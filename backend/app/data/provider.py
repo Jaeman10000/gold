@@ -30,6 +30,31 @@ class DataProvider(ABC):
     @abstractmethod
     def get_dividends(self, market: str) -> list[dict]: ...
 
+    def get_theme_index(self, market: str) -> dict[str, list[str]]:
+        """ticker → 해당 종목이 속한 테마명 리스트 (키움 테마 원본명).
+
+        scoring_service 가 themes.json 키워드와 교차해 성장테마 여부를 판단.
+        구현 불가(mock 등) 시 {} 반환 → theme 점수 None → 가중치 재정규화.
+        """
+        return {}
+
+    def get_supply_scores(
+        self, tickers: list[str], market: str, days: int = 20
+    ) -> dict[str, float]:
+        """ticker → 최근 N거래일 외인+기관 순매수 기반 수급 점수(0~100).
+
+        구현 불가 시 {} 반환 → supply 점수 None → 가중치 재정규화.
+        """
+        return {}
+
+    def get_fundamentals(self, tickers: list[str], market: str) -> dict[str, dict]:
+        """ka10001 주식기본정보 → ticker: {"mac": int, "trde_qty": int}.
+
+        mac = 시가총액, trde_qty = 거래대금(or 거래량). trust 축 계산용.
+        구현 불가 시 {} 반환 → trust 점수 None → 가중치 재정규화.
+        """
+        return {}
+
 
 _provider: DataProvider | None = None
 _init_error: str = ""  # KiwoomClient 초기화 실패 메시지 (health check 용)
