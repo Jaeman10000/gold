@@ -262,23 +262,27 @@ body {
 /* ---------- HUD (풀스크린 오버레이) ---------- */
 .hud { position: absolute; inset: 0; pointer-events: none; z-index: 5; }
 .hud > * { pointer-events: auto; }
-.hud-topleft { position: absolute; top: 14px; left: 14px; display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
-.grade-chip {
-  background: linear-gradient(135deg, var(--gold), var(--gold-deep));
-  color: #1a1206; font-weight: 800; font-size: 18px;
-  padding: 7px 15px; border-radius: 10px;
+.hud-topleft { position: absolute; top: 14px; left: 14px; display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
+
+/* 메인 금액 — 크게 단독 배치 */
+.hud-main-amount { display: flex; align-items: center; gap: 8px; }
+.gold-icon-hud { width: 24px; height: 24px; object-fit: contain; }
+.hud-amount-text {
+  font-size: 26px; font-weight: 900; color: var(--gold-bright);
+  text-shadow: 0 0 14px rgba(247,207,90,.55); letter-spacing: -0.5px;
 }
-.disp-chip {
+
+/* 보조 정보 — 등급·성향 작게 */
+.hud-secondary { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.grade-chip-sm {
+  background: rgba(20,16,11,.78); border: 1px solid var(--line);
+  color: var(--gold); font-size: 12px; font-weight: 700; padding: 3px 9px; border-radius: 8px;
+}
+.disp-chip-sm {
   background: rgba(20,16,11,.74); border: 1px solid var(--line);
-  color: var(--text); font-size: 14px; font-weight: 600; padding: 6px 13px; border-radius: 9px;
+  color: var(--text-dim); font-size: 12px; font-weight: 500; padding: 3px 9px; border-radius: 8px;
 }
-.gold-chip {
-  display: flex; align-items: center; gap: 8px;
-  background: rgba(20,16,11,.76); border: 1px solid var(--line);
-  padding: 6px 16px 6px 7px; border-radius: 999px;
-}
-.gold-icon { width: 28px; height: 28px; object-fit: contain; }
-.gold-chip span { font-weight: 800; color: var(--gold-bright); font-size: 19px; }
+
 .hud-topright { position: absolute; top: 14px; right: 14px; display: flex; align-items: center; gap: 8px; }
 .emblem { width: 44px; height: 44px; object-fit: contain; }
 .tier-label { font-size: 16px; font-weight: 800; color: var(--gold-bright); }
@@ -296,11 +300,10 @@ body {
   background: var(--panel); border-radius: 16px;
   padding: 26px 20px; width: 100%; cursor: pointer; color: var(--text);
   backdrop-filter: blur(4px);
-  border: 2px solid var(--profit);
-  box-shadow: 0 0 10px rgba(76,198,106,.65), 0 0 22px rgba(76,198,106,.4), inset 0 0 12px rgba(76,198,106,.18);
+  border: 2px solid var(--profit); /* fallback; overridden by inline style */
 }
 .rp-rate { font-size: 30px; font-weight: 800; line-height: 1.1; }
-.rp-profit { font-size: 14px; color: var(--text-dim); }
+.rp-profit { font-size: 14px; font-weight: 600; }
 .rp-caret { margin-left: auto; font-size: 26px; color: var(--gold); }
 
 /* [4] 개별주 무조건 한 줄(3개). 줄바꿈 금지, 넘치면 끝에 › 하나 */
@@ -433,6 +436,43 @@ body {
   background: rgba(150,150,150,.16); color: var(--text-dim); border: 1px solid var(--line);
 }
 .acct-note { font-size: 10.5px; color: var(--text-dim); line-height: 1.6; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--line); }
+
+/* ── [1] 성향 카드 ── */
+.disposition-card {}
+.disp-type-row { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 12px; }
+.disp-type-chip { background: linear-gradient(135deg, var(--gold-deep), var(--gold)); color: #1a1000; font-weight: 700; font-size: 0.78rem; padding: 3px 10px; border-radius: 12px; white-space: nowrap; flex-shrink: 0; }
+.disp-summary { font-size: 0.88rem; color: var(--text); line-height: 1.5; }
+.disp-chars { list-style: none; padding: 0; margin: 0 0 12px; }
+.disp-char { font-size: 0.83rem; color: var(--text-dim); padding: 3px 0 3px 14px; position: relative; }
+.disp-char::before { content: '·'; position: absolute; left: 4px; color: var(--gold-deep); }
+.disp-factors { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.disp-factor-chip { font-size: 0.77rem; color: var(--text-dim); background: rgba(255,255,255,0.04); border: 1px solid var(--line); padding: 2px 8px; border-radius: 8px; }
+.disp-note { font-size: 0.79rem; color: var(--gold-deep); margin-bottom: 4px; font-weight: 500; }
+.disp-factors-note { font-size: 0.74rem; color: var(--text-dim); font-style: italic; }
+
+/* ── [2] 테마 타당성 카드 ── */
+.theme-context-card {}
+.tc-theme-names { font-size: 0.83rem; color: var(--gold); font-weight: 600; margin-bottom: 12px; }
+.tc-side { margin-bottom: 10px; }
+.tc-side-label { font-size: 0.75rem; font-weight: 600; padding: 2px 8px; border-radius: 8px; display: inline-block; margin-bottom: 6px; }
+.tc-side-label.pos { background: rgba(80,180,80,0.18); color: #7de87d; }
+.tc-side-label.neg { background: rgba(226,101,92,0.18); color: var(--loss); }
+.tc-list { list-style: none; padding: 0; margin: 0; }
+.tc-list li { font-size: 0.83rem; color: var(--text-dim); padding: 3px 0 3px 14px; position: relative; line-height: 1.5; }
+.tc-list li::before { content: '–'; position: absolute; left: 2px; color: var(--text-dim); opacity: 0.5; }
+.tc-disclaimer { font-size: 0.76rem; color: var(--text-dim); border-top: 1px solid var(--line); padding-top: 8px; margin-top: 10px; }
+
+/* ── [3] 점수 이해하기 (아코디언) ── */
+.score-explain-card { padding: 0; overflow: hidden; }
+.score-explain-toggle { width: 100%; display: flex; justify-content: space-between; align-items: center; background: none; border: none; color: var(--text-dim); font-size: 0.86rem; padding: 13px 14px; cursor: pointer; text-align: left; gap: 8px; }
+.score-explain-toggle:hover { color: var(--text); }
+.toggle-arrow { color: var(--gold-deep); font-size: 0.7rem; flex-shrink: 0; }
+.score-explain-body { padding: 0 14px 14px; }
+.score-explain-warn { font-size: 0.77rem; color: var(--text-dim); background: rgba(232,179,57,0.06); border-left: 3px solid var(--gold-deep); padding: 6px 10px; margin-bottom: 12px; border-radius: 0 4px 4px 0; line-height: 1.5; }
+.score-explain-item { margin-bottom: 12px; }
+.score-explain-item:last-child { margin-bottom: 0; }
+.sei-key { font-size: 0.83rem; font-weight: 600; color: var(--gold-deep); margin-bottom: 4px; }
+.sei-text { font-size: 0.82rem; color: var(--text-dim); line-height: 1.6; }
 
 /* 구성요소 바 */
 .comp-row { margin-bottom: 14px; }

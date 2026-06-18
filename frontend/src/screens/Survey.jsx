@@ -236,6 +236,100 @@ function ThemeSelector({ themes, onConfirm, onCancel }) {
   )
 }
 
+// [3] 점수 이해하기 — 무엇을 측정하는지 설명. "높이는 방법" 절대 금지.
+const SCORE_EXPLAIN = {
+  basic: [
+    {
+      key: '재무건전성 (50%)',
+      text: 'DART 공시 기준 영업이익률(수익성)·부채비율(안정성)·매출성장률(성장성)을 측정합니다. 성장성의 실효 비중은 전체의 15% 이하로 제한해 특정 투자철학 우대를 방지합니다.',
+    },
+    {
+      key: '수급 (30%)',
+      text: '최근 20일 외국인·기관 순매수 비율을 기준으로 합니다. 수급이 높다고 좋은 포트가 아니라, 현재 시장 흐름을 사실로 보여줍니다. 키움 API 기준이며 지연이 있을 수 있습니다.',
+    },
+    {
+      key: '시장신뢰 (20%)',
+      text: '시가총액과 거래대금의 로그값을 기준으로 내 포트폴리오 안에서의 상대 위치(백분위)를 계산합니다. 절대 대형주 여부가 아닌 내 포트 안에서의 분포 위치입니다.',
+    },
+  ],
+  theme: [
+    {
+      key: '정렬도 (%)',
+      text: '평가금액 기준으로 내가 선택한 테마에 속하는 종목의 비중 합입니다. 정렬도가 낮다고 나쁜 포트가 아닙니다.',
+    },
+    {
+      key: '정렬 종목 품질',
+      text: '테마에 정렬된 종목들의 평균 펀더멘털 점수(기본 모드 기준)입니다. 비중(정렬도)과 질(정렬 종목 품질)을 분리해 "비중이 낮은 건지, 종목 자체가 약한 건지"를 구분합니다.',
+    },
+    {
+      key: '테마 매칭 방식',
+      text: '큐레이션 바스켓(A) > DART KSIC 업종코드(B) > 종목명 키워드(C) 순서로 매칭합니다. 매칭 근거(matchSource)가 종목별로 투명하게 표시됩니다.',
+    },
+  ],
+}
+
+// [2] 테마 맥락 통합 카드 — 선택 테마 전체 통합 4~5줄, 투자권유 아님
+function ThemeContextMergedCard({ themeContexts }) {
+  const names = themeContexts.map(tc => tc.label).join(' + ')
+  // 각 테마에서 첫 번째 항목만, 최대 2개씩
+  const pros = themeContexts.flatMap(tc => (tc.pros || []).slice(0, 1)).slice(0, 2)
+  const cons = themeContexts.flatMap(tc => (tc.cons || []).slice(0, 1)).slice(0, 2)
+  return (
+    <section className="card theme-context-card">
+      <div className="card-title">
+        테마 시장 맥락
+        <span className="card-title-sub">균형 정보 · 투자권유 아님</span>
+      </div>
+      <div className="tc-theme-names">선택 테마: {names}</div>
+      {pros.length > 0 && (
+        <div className="tc-side">
+          <span className="tc-side-label pos">긍정 전망</span>
+          <ul className="tc-list">
+            {pros.map((p, i) => <li key={i}>{p}</li>)}
+          </ul>
+        </div>
+      )}
+      {cons.length > 0 && (
+        <div className="tc-side">
+          <span className="tc-side-label neg">리스크</span>
+          <ul className="tc-list">
+            {cons.map((c, i) => <li key={i}>{c}</li>)}
+          </ul>
+        </div>
+      )}
+      <div className="tc-disclaimer">
+        시장 일반 맥락이며 투자권유 아님. 종목 추천 아님. 판단은 본인 몫입니다.
+      </div>
+    </section>
+  )
+}
+
+function ScoreExplainCard({ mode }) {
+  const [open, setOpen] = useState(false)
+  const items = SCORE_EXPLAIN[mode] || SCORE_EXPLAIN.basic
+  return (
+    <section className="card score-explain-card">
+      <button className="score-explain-toggle" onClick={() => setOpen(o => !o)}>
+        <span>점수 이해하기 — 이 점수가 무엇을 측정하는지</span>
+        <span className="toggle-arrow">{open ? '▲' : '▼'}</span>
+      </button>
+      {open && (
+        <div className="score-explain-body">
+          <div className="score-explain-warn">
+            ⚠ "점수를 높이는 방법"이 아닙니다. 측정 기준을 이해하는 자료입니다.
+          </div>
+          {items.map(item => (
+            <div className="score-explain-item" key={item.key}>
+              <div className="sei-key">{item.key}</div>
+              <div className="sei-text">{item.text}</div>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
+  )
+}
+
 // ── 메인 화면 ────────────────────────────────────────────────────────────────
 
 export default function Survey() {
@@ -328,6 +422,31 @@ export default function Survey() {
             </section>
           )}
 
+          {/* ── [1] 성향 카드 (사실 기반 — 우열 아님, 스타일 정체성) ── */}
+          {data.disposition && (
+            <section className="card disposition-card">
+              <div className="card-title">
+                내 포트폴리오 성향
+                <span className="card-title-sub">스타일 정체성 · 우열 아님</span>
+              </div>
+              <div className="disp-type-row">
+                <span className="disp-type-chip">{data.disposition.type}</span>
+                <span className="disp-summary">{data.disposition.summary}</span>
+              </div>
+              <ul className="disp-chars">
+                {data.disposition.chars.map((c, i) => (
+                  <li className="disp-char" key={i}>{c}</li>
+                ))}
+              </ul>
+              <div className="disp-factors">
+                {data.disposition.factors.map((f, i) => (
+                  <span className="disp-factor-chip" key={i}>{f}</span>
+                ))}
+              </div>
+              <div className="disp-note">{data.disposition.note}</div>
+            </section>
+          )}
+
           {/* ── 구성요소 분해 ── */}
           <section className="card">
             {mode === 'basic' ? (
@@ -370,6 +489,11 @@ export default function Survey() {
               </>
             )}
           </section>
+
+          {/* ── [2] 테마 타당성 통합 요약 (테마 모드 전용) ── */}
+          {mode === 'theme' && data.themeContexts?.length > 0 && (
+            <ThemeContextMergedCard themeContexts={data.themeContexts} />
+          )}
 
           {/* ── 종목별 기여도 ── */}
           <section className="card">
@@ -429,6 +553,9 @@ export default function Survey() {
               </div>
             ))}
           </section>
+
+          {/* ── [3] 점수 이해하기 (측정 기준 설명 — 행동 권유 없음) ── */}
+          <ScoreExplainCard mode={mode} />
 
           {/* ── 계좌 구성 (사실 정보 — 점수와 무관) ── */}
           {data.account && (
