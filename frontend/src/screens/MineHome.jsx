@@ -97,8 +97,7 @@ export default function MineHome() {
             <div className="home-pill-chips">
               <ReturnPanel data={data} onExpand={() => setSheetOpen(true)} />
               <HoldingChips
-                holdings={data.topHoldings}
-                total={data.holdings.length}
+                holdings={data.holdings}
                 onExpand={() => setSheetOpen(true)}
               />
             </div>

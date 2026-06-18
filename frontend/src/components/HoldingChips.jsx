@@ -1,8 +1,8 @@
-// 보유 종목 미리보기 칩 — 큰 칩, 가로 스크롤 (CLAUDE.md §5).
-// 화면 가로 약 1/3씩, 수익률 색상 분리. 스크롤로 전체 탐색.
+// 보유 종목 전체 가로 스크롤 칩 (CLAUDE.md §5). 홈 화면용.
+// holdings = 전체 보유 배열. 가로 스와이프로 모든 종목 탐색.
 import { pct, profitColor } from '../utils/format'
 
-export default function HoldingChips({ holdings, total, onExpand }) {
+export default function HoldingChips({ holdings, onExpand }) {
   return (
     <div className="holding-chips-lg">
       {holdings.map((h) => (
@@ -13,12 +13,6 @@ export default function HoldingChips({ holdings, total, onExpand }) {
           </span>
         </button>
       ))}
-      {total > holdings.length && (
-        <button className="holding-chip-lg more-chip" onClick={onExpand} aria-label="전체 보기">
-          <span className="chip-lg-more">+{total - holdings.length}</span>
-          <span className="chip-lg-more-sub">종목 더보기</span>
-        </button>
-      )}
     </div>
   )
 }
