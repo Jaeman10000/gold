@@ -199,7 +199,7 @@
 - ✅ **Phase 3b 코드 구현 완료 (2026-06-18)** — 측량소 2모드 실동작 + 실계좌 검증
   - probe 게이트 통과 → trust 축 포함(0.2). `trust_i = 0.6·pct(log_mac) + 0.4·pct(log_vol)` 포트 내 백분위.
   - 기본 모드: `fundᵢ = 0.5·health + 0.3·supply + 0.2·trust` (N/A 재정규화). health = DART 수익성·안정성·성장성(성장 실효 15% 상한). PER/PBR/ROE 미사용(스타일 중립).
-  - 테마 모드: `sᵢ = alignᵢ·fundᵢ`. 매칭 3단 폴백 중 (A)바스켓 + (C)종목명 키워드 구현, (B)DART KSIC는 v2.
+  - 테마 모드: `sᵢ = alignᵢ·fundᵢ`. 매칭 3단 폴백 A(바스켓)>B(DART KSIC 업종)>C(종목명 키워드) 구현 완료.
   - 등급: 0~20=F · 21~40=D · 41~60=C · 61~75=B · 76~88=A · 89~100=S.
   - 검증: 기본 47(C), 로봇+AI 테마 6(F, 에스피지 basket 매칭). HUD `광맥 C·47` ↔ `AI테마 F·6`.
 - ✅ **테마 데이터 확장 + 자유입력 렌즈 완료 (2026-06-18)** — Option A (결정론적, LLM 없음)
@@ -208,8 +208,15 @@
   - **자유입력 해석**: `POST /api/survey/theme/interpret` — 사용자가 "전기차·자율주행이 미래다" 입력 → 키워드 사전 스캔 → 프리셋 감지 → "이렇게 이해했어요" 확인 → 적용. matchSource 투명 노출.
   - **DB 저장 포맷 변경**: 라벨 문자열 → 자급식 객체 `[{label,keywords,codes,type:preset|custom}]`. `get_user_themes`가 `resolve_themes`로 재해석(구버전 라벨 호환).
   - 프론트 ThemeSelector 2뷰(칩+자유입력 / 확인뷰) + 매칭 키워드 칩.
+- ✅ **KSIC 업종 매칭 B레이어 완료 (2026-06-18)**
+  - `backend/ksic_themes.json`: 산업순수형 테마 8개 KSIC 코드 매핑. 오염 코드 blocklist(64992 지주·2629 기타전자부품).
+  - `dart_client.py`: `get_induty_codes()` — DART `company.json` → `induty_code` 조회, `data/induty_codes.json` 캐시.
+  - `scoring_service.py`: `_match_ticker()` A>B>C 3단 폴백. `matchSource` = `"basket"` / `"ksic:28202"` / `"keyword:전기차"` / `""`.
+  - 검증: LG에너지솔루션을 바스켓에서 제거해도 `ksic:28202`로 2차전지 매칭 확인.
+- ✅ **측량소 [A] 해석글 + [B] 계좌구성 카드 완료 (2026-06-18)**
+  - **[A] 점수 해석글**: 규칙 기반(LLM 없음), 3파트(사실·구성·제안). 종목명·매매동사 0개. 기본/테마 모드 각각 분기. `scoring_service._build_interpretation_*()`.
+  - **[B] 계좌구성 카드**: kt00018(총매수·평가) + kt00001(예수금 `entr`). 비중 기준 = 총자산(주식 평가총액 + 예수금) → 합 100%. 집중도 판정은 주식평가총액 기준(단일 종목 ≥40% → "집중도 높음" 팩트 태그). 예수금 `잠정` 태그 + "키움 앱과 다를 수 있음" 주석. **점수에 반영 0 — 스타일 중립**.
 - ⬜ **다음: Phase 3 마무리·v2 진입**
-  - 자유입력 순수 커스텀 키워드 매칭 강화 = **(B) DART KSIC 업종 레이어** (v2). 테마 객체에 `ksic` 필드 예약됨.
   - 탐사(what-if): 종목 입력 → 가상 비중으로 활성 모드 점수 재계산.
   - LS ELECTRIC 등 corp_code 미매핑 종목 보완(현재 health_na 폴백).
   - ⚠️ **환경 불일치**: `backend/.venv`가 Python **3.14.5** (CLAUDE.md는 3.12 고정). 동작은 하나 정책 위반 — 3.12 재구성 검토.

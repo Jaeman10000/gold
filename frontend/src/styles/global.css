@@ -390,6 +390,50 @@ body {
   font-size: 11px; color: var(--text-dim); line-height: 1.5;
 }
 
+/* ── [A] 점수 해석 글 ── */
+.interp-block {
+  margin: 12px 0; padding: 14px 16px; border-radius: 12px;
+  background: rgba(22,18,12,.55); border: 1px solid var(--line);
+  display: flex; flex-direction: column; gap: 10px;
+}
+.interp-row { display: flex; gap: 10px; align-items: flex-start; }
+.interp-dot { flex: none; width: 7px; height: 7px; border-radius: 50%; margin-top: 6px; }
+.interp-dot.fact  { background: var(--gold-bright); }
+.interp-dot.shape { background: #9a8050; }
+.interp-dot.tip   { background: #6b8a6b; }
+.interp-text { font-size: 13px; line-height: 1.6; color: var(--text); margin: 0; }
+.interp-tip { color: var(--text-dim); }
+
+/* ── [B] 계좌 구성 카드 ── */
+.account-card { margin-top: 14px; }
+.acct-summary { display: flex; gap: 8px; margin-bottom: 8px; }
+.acct-stat {
+  flex: 1; padding: 10px; border-radius: 10px; text-align: center;
+  background: rgba(20,16,11,.5); border: 1px solid var(--line);
+}
+.acct-label { display: block; font-size: 11px; color: var(--text-dim); margin-bottom: 4px; }
+.acct-prov {
+  margin-left: 4px; font-size: 9px; padding: 1px 5px; border-radius: 6px;
+  background: rgba(232,179,57,.15); color: var(--gold-bright); vertical-align: middle;
+}
+.acct-val { font-size: 14px; font-weight: 700; color: var(--text); }
+.acct-prov-note { font-size: 10.5px; color: var(--text-dim); margin-bottom: 12px; line-height: 1.5; }
+
+.acct-positions { display: flex; flex-direction: column; gap: 11px; margin-top: 4px; }
+.acct-pos-head { display: flex; gap: 8px; align-items: baseline; }
+.acct-pos-name { font-weight: 600; font-size: 13px; color: var(--text); }
+.acct-pos-weight { margin-left: auto; font-weight: 700; font-size: 13px; color: var(--text); }
+.acct-pos-sub { font-size: 11px; color: var(--text-dim); margin: 2px 0 4px; }
+.acct-pos-bar { height: 6px; background: var(--bg); border-radius: 6px; overflow: hidden; }
+.acct-pos-fill { height: 100%; background: linear-gradient(90deg, var(--gold-deep), var(--gold-bright)); transition: width .4s ease; }
+.acct-pos-fill.cash { background: linear-gradient(90deg, #4a5a6a, #6b7d8a); }
+.cash-row .acct-pos-name { color: var(--text-dim); }
+.concentr-tag {
+  font-size: 10px; padding: 1px 7px; border-radius: 999px;
+  background: rgba(150,150,150,.16); color: var(--text-dim); border: 1px solid var(--line);
+}
+.acct-note { font-size: 10.5px; color: var(--text-dim); line-height: 1.6; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--line); }
+
 /* 구성요소 바 */
 .comp-row { margin-bottom: 14px; }
 .comp-row:last-child { margin-bottom: 0; }
@@ -538,6 +582,14 @@ body {
   background: radial-gradient(ellipse at 50% 58%, rgba(32,24,10,.97) 0%, rgba(8,6,4,.99) 70%);
   backdrop-filter: blur(12px);
   animation: fadeInLoad .35s ease;
+}
+/* 화면 내 전체 블러 오버레이 — 뒷 콘텐츠가 흐릿하게 보임 (측량소 로딩 등) */
+.loading-screenblur {
+  position: fixed; inset: 0; z-index: 200;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(12, 8, 4, 0.55);
+  backdrop-filter: blur(10px);
+  animation: fadeInLoad .25s ease;
 }
 /* 화면 내 오버레이 (시장 전환 등) */
 .loading-overlay {

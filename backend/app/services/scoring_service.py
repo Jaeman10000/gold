@@ -29,6 +29,9 @@ from app.data.provider import DataProvider
 logger = logging.getLogger(__name__)
 
 _THEMES_PATH = Path(__file__).parents[2] / "themes.json"
+_KSIC_PATH = Path(__file__).parents[2] / "ksic_themes.json"
+
+_ksic_config: dict | None = None
 
 _BASIC_LENS = (
     "객관 펀더멘털 렌즈 — 재무건전성·수급·시장신뢰의 사실 스냅샷입니다. "
@@ -166,19 +169,44 @@ def load_themes() -> list[dict]:
         return []
 
 
+def load_ksic_config() -> dict:
+    """ksic_themes.json → {blocklist:[prefix], ksic_map:{label:[prefix]}}.
+
+    KSIC B레이어 매칭의 단일 진실 소스. 산업순수형 테마만 등록(가치사슬형 제외).
+    """
+    global _ksic_config
+    if _ksic_config is None:
+        try:
+            with open(_KSIC_PATH, encoding="utf-8") as f:
+                _ksic_config = json.load(f)
+        except Exception:
+            logger.exception("ksic_themes.json 로드 실패")
+            _ksic_config = {"blocklist": [], "ksic_map": {}}
+    return _ksic_config
+
+
 # ── 테마 매칭 엔진 (3단 폴백: basket > KSIC > keyword) ───────────────────────
 
 def _match_ticker(
     ticker: str,
     name: str,
+    induty_code: str | None,
     active_themes: list[dict],
 ) -> tuple[bool, str, list[str]]:
-    """ticker가 활성 테마(자급식 객체)에 속하는지 3단 폴백 매칭.
+    """ticker가 활성 테마(자급식 객체)에 속하는지 A>B>C 3단 폴백 매칭.
 
     active_themes: 각 항목 {label, keywords[], codes[]} (DB에 저장된 자급식 객체).
+    induty_code: DART KSIC 업종코드 (B레이어용). 없으면 B 건너뜀.
     반환: (matched, matchSource, matched_label_list)
-    matchSource: "basket" | "keyword" | ""  (B: DART KSIC는 v2 예정)
+    matchSource: "basket" | "ksic:28202" | "keyword:전기차" | ""
+      A 바스켓 > B KSIC prefix(산업순수형만, 오염코드 제외) > C 종목명 키워드.
     """
+    ksic_cfg = load_ksic_config()
+    ksic_map = ksic_cfg.get("ksic_map", {})
+    blocklist = ksic_cfg.get("blocklist", [])
+    # 지주·범용 코드는 어떤 테마도 트리거 금지 (prefix)
+    blocked = bool(induty_code) and any(induty_code.startswith(b) for b in blocklist)
+
     matched_labels: list[str] = []
     first_source = ""
 
@@ -186,16 +214,26 @@ def _match_ticker(
         label = theme.get("label", "")
         codes = theme.get("codes", []) or []
         keywords = theme.get("keywords", []) or []
-        # A: 큐레이션 바스켓 (신뢰도 높음 — 에스피지=로봇 같은 케이스 커버)
+        source: str | None = None
+
+        # A: 큐레이션 바스켓 (신뢰도 최고 — 에스피지=로봇 같은 케이스 커버)
         if ticker in codes:
+            source = "basket"
+        # B: DART KSIC 업종 prefix (산업순수형 테마만, 오염코드 제외)
+        elif induty_code and not blocked:
+            prefixes = ksic_map.get(label, [])
+            if any(induty_code.startswith(p) for p in prefixes):
+                source = f"ksic:{induty_code}"
+        # C: 종목명 키워드
+        if source is None:
+            kw_hit = next((kw for kw in keywords if kw in name), None)
+            if kw_hit:
+                source = f"keyword:{kw_hit}"
+
+        if source:
             matched_labels.append(label)
             if not first_source:
-                first_source = "basket"
-        elif any(kw in name for kw in keywords):
-            # C: 종목명 키워드 매칭 (B: DART induty_code는 v2 예정)
-            matched_labels.append(label)
-            if not first_source:
-                first_source = "keyword"
+                first_source = source
 
     return bool(matched_labels), first_source, matched_labels
 
@@ -272,6 +310,141 @@ def _build_components_theme(
     ]
 
 
+# ── 점수 해석 글 (규칙 기반, LLM 없음) ─────────────────────────────────────────
+# 하드룰: 종목명·섹터명·매매동사(사다/팔다/매수/매도) 불포함. 우열 단정 금지.
+# 사실 서술 + "판단은 본인 몫" 톤만. 측량소가 측정한 것만 말한다.
+
+# 구성요소별 "사실" 문구 (점수대별). 매매·권유 표현 없음.
+_COMP_FACT = {
+    "재무건전성": {
+        "high": "재무 지표(수익성·안정성)가 양호한 편으로 나타납니다",
+        "mid": "재무 지표가 보통 수준으로 나타납니다",
+        "low": "재무 지표가 다소 약하게 나타납니다",
+        "na": "재무 데이터가 아직 확보되지 않았습니다",
+    },
+    "수급": {
+        "high": "최근 20일 외국인·기관 순매수가 많았습니다",
+        "mid": "최근 20일 외국인·기관 수급은 중립적이었습니다",
+        "low": "최근 20일 외국인·기관 순매수가 적었습니다",
+        "na": "수급 데이터가 아직 확보되지 않았습니다",
+    },
+    "시장신뢰": {
+        "high": "시가총액·거래대금이 포트폴리오 안에서 상위에 있습니다",
+        "mid": "시가총액·거래대금이 포트폴리오 안에서 중간 수준입니다",
+        "low": "시가총액·거래대금이 포트폴리오 안에서 하위에 있습니다",
+        "na": "시장 데이터가 아직 확보되지 않았습니다",
+    },
+}
+
+
+def _josa(word: str, pair: tuple[str, str]) -> str:
+    """한글 받침 유무로 조사 선택. pair=(받침있음, 받침없음) 예: ('이','가')."""
+    if not word:
+        return pair[1]
+    code = ord(word[-1])
+    if 0xAC00 <= code <= 0xD7A3:
+        return pair[0] if (code - 0xAC00) % 28 else pair[1]
+    return pair[1]
+
+
+def _score_level(score) -> str:
+    if score is None:
+        return "na"
+    if score >= 61:
+        return "high"
+    if score >= 41:
+        return "mid"
+    return "low"
+
+
+def _build_interpretation_basic(score: int, components: list[dict]) -> dict:
+    """기본 모드 해석글 3단: (1)사실 (2)중립 묘사 (3)'더 보고 싶다면' 톤."""
+    scored = [c for c in components if c.get("score") is not None]
+
+    if not scored:
+        return {
+            "fact": "아직 구성요소 데이터가 충분히 확보되지 않았습니다.",
+            "shape": "데이터가 모이면 포트폴리오의 구성 특징을 보여드립니다.",
+            "suggestion": "데이터 연동 상태를 측량소 상단에서 확인할 수 있습니다.",
+        }
+
+    highest = max(scored, key=lambda c: c["score"])
+    lowest = min(scored, key=lambda c: c["score"])
+
+    # (1) 사실 — 가장 낮은 항목을 점수와 함께, 이유를 사실로 서술
+    low_fact = _COMP_FACT.get(lowest["key"], {}).get(
+        _score_level(lowest["score"]), ""
+    )
+    fact = (
+        f"가장 높은 항목은 {highest['key']}({round(highest['score'])}점), "
+        f"가장 낮은 항목은 {lowest['key']}({round(lowest['score'])}점)입니다. "
+        f"{low_fact}."
+    )
+
+    # (2) 중립 묘사 — 우열 단어 없이 구성만
+    hk, lk = highest["key"], lowest["key"]
+    if hk == lk:
+        shape = f"{hk}{_josa(hk, ('을', '를'))} 중심으로 균형 잡힌 구성입니다."
+    else:
+        shape = (
+            f"{hk}{_josa(hk, ('이', '가'))} 상대적으로 높고, "
+            f"{lk}{_josa(lk, ('이', '가'))} 상대적으로 낮은 구성입니다."
+        )
+
+    # (3) '나쁘지 않습니다' 톤 + 더 보기 안내 (종목/섹터/매매 표현 없음)
+    suggestion = (
+        "점수가 낮아도 나쁜 포트폴리오라는 뜻은 아닙니다. "
+        "더 자세히 보고 싶다면 아래 구성요소별 기여도와 종목별 분해를 살펴보세요. "
+        "판단은 본인 몫입니다."
+    )
+    return {"fact": fact, "shape": shape, "suggestion": suggestion}
+
+
+def _build_interpretation_theme(
+    score: int, contributions: list[dict], labels: list[str], theme: dict
+) -> dict:
+    """테마 모드 해석글 3단 — '비중 부족 vs 종목 품질'을 사실로 구분."""
+    alignment = theme.get("alignment") or 0
+    quality = theme.get("matchedQuality")
+    matched_cnt = sum(1 for c in contributions if c.get("matched"))
+    total_cnt = len(contributions)
+    lens = "·".join(labels) if labels else "선택하신 테마"
+
+    # (1) 사실 — 정렬도와 정렬 종목 수
+    fact = (
+        f"선택하신 렌즈({lens}) 기준 정렬도는 {round(alignment, 1)}%입니다. "
+        f"보유 {total_cnt}종목 중 {matched_cnt}종목이 이 방향에 정렬돼 있습니다."
+    )
+
+    # (2) 중립 묘사 — 비중(정렬도) vs 종목 품질(quality) 분리
+    a_lvl = _score_level(alignment)
+    q_lvl = _score_level(quality) if quality is not None else "na"
+    if q_lvl == "na":
+        shape = "정렬된 종목이 없어 종목 품질은 아직 계산되지 않았습니다."
+    elif a_lvl in ("low", "mid") and q_lvl == "high":
+        shape = (
+            "정렬된 종목 자체의 펀더멘털은 양호한 편이나, "
+            "포트폴리오 안에서 이 방향의 비중은 낮은 구성입니다."
+        )
+    elif a_lvl == "high" and q_lvl in ("low", "mid"):
+        shape = (
+            "이 방향의 비중은 높은 편이나, "
+            "정렬된 종목의 펀더멘털은 상대적으로 약한 구성입니다."
+        )
+    elif a_lvl == "high" and q_lvl == "high":
+        shape = "이 방향에 비중과 종목 펀더멘털이 모두 정렬된 구성입니다."
+    else:
+        shape = "이 방향과는 비중·종목 펀더멘털 모두 정렬이 낮은 구성입니다."
+
+    # (3) 톤 — 사용자 렌즈 기준일 뿐 우열 아님 + 더 보기
+    suggestion = (
+        "이 점수는 사용자가 직접 고른 렌즈 기준이며, 우열 평가가 아닙니다. "
+        "정렬이 낮아도 결함이 아닙니다. "
+        "더 보고 싶다면 종목별 정렬 여부와 기여도를 살펴보세요. 판단은 본인 몫입니다."
+    )
+    return {"fact": fact, "shape": shape, "suggestion": suggestion}
+
+
 # ── 공개 인터페이스 ──────────────────────────────────────────────────────────
 
 def survey_breakdown(
@@ -315,6 +488,12 @@ def survey_breakdown(
     active_themes = themes or []
     active_labels = [t.get("label", "") for t in active_themes]
 
+    # KSIC 업종코드 (theme 모드 B레이어 매칭용) — basic 모드는 비용 절감 위해 미조회
+    induty_map: dict[str, str | None] = {}
+    if mode == "theme" and active_themes:
+        from app.data.dart_client import get_induty_codes
+        induty_map = get_induty_codes(tickers)
+
     contributions: list[dict] = []
     total_score = 0.0
 
@@ -331,7 +510,7 @@ def survey_breakdown(
 
         if mode == "theme" and active_themes:
             matched, match_src, matched_themes = _match_ticker(
-                ticker, name, active_themes
+                ticker, name, induty_map.get(ticker), active_themes
             )
             align = 1.0 if matched else 0.0
             stock_score = align * (fund or 0.0)
@@ -379,6 +558,9 @@ def survey_breakdown(
     if mode == "basic":
         result["lens"] = _BASIC_LENS
         result["components"] = _build_components_basic(contributions)
+        result["interpretation"] = _build_interpretation_basic(
+            score, result["components"]
+        )
     else:
         theme_label = "·".join(active_labels)
         result["lens"] = (
@@ -402,6 +584,9 @@ def survey_breakdown(
                 else None
             ),
         }
+        result["interpretation"] = _build_interpretation_theme(
+            score, contributions, active_labels, result["theme"]
+        )
 
     return result
 

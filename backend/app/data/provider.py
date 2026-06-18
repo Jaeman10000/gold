@@ -55,6 +55,16 @@ class DataProvider(ABC):
         """
         return {}
 
+    def get_account_summary(self, market: str) -> dict | None:
+        """계좌 요약: 총매입금액·주식평가총액·예수금(현금). 구현 불가 시 None.
+
+        반환: {"totalPurchase": int, "totalEval": int, "cash": int,
+               "cashProvisional": bool}
+        cash(예수금)는 kt00018↔kt00001 정합성 미확정 → cashProvisional=True (잠정).
+        ★ 점수 로직과 무관 — 현금 비중은 절대 점수에 반영하지 않는다(스타일 중립).
+        """
+        return None
+
 
 _provider: DataProvider | None = None
 _init_error: str = ""  # KiwoomClient 초기화 실패 메시지 (health check 용)

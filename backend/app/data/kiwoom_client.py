@@ -152,6 +152,22 @@ class KiwoomClient(DataProvider):
 
         return all_items
 
+    def _call_acnt_raw(self, api_id: str, body: dict) -> dict:
+        """계좌 API 단건 호출 — 최상위 응답 dict 반환 (요약 필드용, 페이지네이션 없음)."""
+        resp = httpx.post(
+            f"{self._base}/api/dostk/acnt",
+            json=body,
+            headers={
+                **self._auth_headers(),
+                "api-id": api_id,
+                "cont-yn": "N",
+                "next-key": "",
+            },
+            timeout=10,
+        )
+        resp.raise_for_status()
+        return resp.json()
+
     # ── 범용 단건 API 호출 ───────────────────────────────────────────────────
 
     def _call_api(self, path: str, api_id: str, body: dict) -> dict:
@@ -312,6 +328,34 @@ class KiwoomClient(DataProvider):
     def get_dividends(self, market: str) -> list[dict]:
         # Step 4 에서 CSV 임포트로 구현. 지금은 빈 리스트 → 배당 수확 0원 상태.
         return []
+
+    def get_account_summary(self, market: str) -> dict | None:
+        """kt00018(총매입·평가) + kt00001(예수금 entr) → 계좌 요약.
+
+        cash = kt00001 'entr'(예수금). 두 API 정합성 미확정이라 잠정값으로 표기.
+        실패 시 None (프론트는 카드 숨김). 점수 로직과 무관.
+        """
+        if market != "KR":
+            return None
+        try:
+            summary = self._call_acnt_raw(
+                "kt00018", {"qry_tp": "1", "dmst_stex_tp": "NXT"}
+            )
+            total_purchase = _to_int(summary.get("tot_pur_amt", 0))
+            total_eval = _to_int(summary.get("tot_evlt_amt", 0))
+
+            cash_resp = self._call_acnt_raw("kt00001", {"qry_tp": "2"})
+            cash = _to_int(cash_resp.get("entr", 0))  # 예수금 (잠정)
+
+            return {
+                "totalPurchase": total_purchase,
+                "totalEval": total_eval,
+                "cash": cash,
+                "cashProvisional": True,  # 키움 앱 표시값과 대조 전
+            }
+        except Exception as e:
+            logger.warning("계좌 요약(kt00018/kt00001) 조회 실패: %s", e)
+            return None
 
     def get_fundamentals(self, tickers: list[str], market: str) -> dict[str, dict]:
         """ka10001 주식기본정보 → ticker: {"mac": int, "trde_qty": int}.

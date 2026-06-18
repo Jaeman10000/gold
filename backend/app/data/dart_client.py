@@ -25,9 +25,13 @@ logger = logging.getLogger(__name__)
 
 _DART_BASE = "https://opendart.fss.or.kr/api"
 _CORP_CODES_PATH = Path(__file__).parents[2] / "data" / "corp_codes.json"
+_INDUTY_CODES_PATH = Path(__file__).parents[2] / "data" / "induty_codes.json"
 
 _ticker_map: dict[str, str] = {}
 _map_loaded = False
+
+_induty_cache: dict[str, str] = {}
+_induty_loaded = False
 
 
 def _corp_codes_available() -> bool:
@@ -89,6 +93,81 @@ def update_corp_code_cache() -> int:
 def get_corp_code(ticker: str) -> str | None:
     _load_ticker_map()
     return _ticker_map.get(ticker)
+
+
+# ── KSIC 업종코드 (테마 B레이어 매칭용) ─────────────────────────────────────────
+
+def _load_induty_cache() -> None:
+    global _induty_cache, _induty_loaded
+    if _induty_loaded:
+        return
+    if _INDUTY_CODES_PATH.exists():
+        try:
+            with open(_INDUTY_CODES_PATH, encoding="utf-8") as f:
+                _induty_cache = json.load(f)
+            logger.info("induty_code 캐시 로드: %d 종목", len(_induty_cache))
+        except Exception as e:
+            logger.warning("induty_codes.json 로드 실패: %s", e)
+    _induty_loaded = True
+
+
+def _save_induty_cache() -> None:
+    try:
+        _INDUTY_CODES_PATH.parent.mkdir(parents=True, exist_ok=True)
+        with open(_INDUTY_CODES_PATH, "w", encoding="utf-8") as f:
+            json.dump(_induty_cache, f, ensure_ascii=False)
+    except Exception as e:
+        logger.warning("induty_codes.json 저장 실패: %s", e)
+
+
+def get_induty_codes(tickers: list[str]) -> dict[str, str | None]:
+    """ticker 목록 → KSIC 업종코드(induty_code). 캐시 우선, 미스만 DART 조회.
+
+    DART company.json 의 induty_code 는 거의 변하지 않으므로 파일 캐싱(반복 콜 0).
+    DART_API_KEY 없으면 모두 None. 조회 실패(None)는 캐싱 안 함(다음에 재시도).
+    """
+    if not settings.dart_api_key:
+        return {t: None for t in tickers}
+
+    _load_ticker_map()
+    _load_induty_cache()
+
+    result: dict[str, str | None] = {}
+    dirty = False
+    for ticker in tickers:
+        if ticker in _induty_cache:
+            result[ticker] = _induty_cache[ticker]
+            continue
+        corp_code = _ticker_map.get(ticker)
+        if not corp_code:
+            result[ticker] = None
+            continue
+        code = _fetch_induty_code(corp_code)
+        result[ticker] = code
+        if code:  # 성공한 코드만 캐싱 (실패=네트워크 이슈 → 재시도 여지)
+            _induty_cache[ticker] = code
+            dirty = True
+    if dirty:
+        _save_induty_cache()
+    return result
+
+
+def _fetch_induty_code(corp_code: str) -> str | None:
+    """DART company.json → induty_code(KSIC 기반 업종코드). 실패 시 None."""
+    try:
+        resp = httpx.get(
+            f"{_DART_BASE}/company.json",
+            params={"crtfc_key": settings.dart_api_key, "corp_code": corp_code},
+            timeout=10,
+        )
+        data = resp.json()
+        if data.get("status") != "000":
+            return None
+        code = (data.get("induty_code") or "").strip()
+        return code or None
+    except Exception as e:
+        logger.debug("induty_code 조회 실패 %s: %s", corp_code, e)
+        return None
 
 
 # ── 점수 계산 ─────────────────────────────────────────────────────────────────

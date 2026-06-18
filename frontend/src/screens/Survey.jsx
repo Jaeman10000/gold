@@ -18,6 +18,16 @@ function gradeColor(grade) {
   return 'var(--text-dim)'
 }
 
+// 금액 포맷 — KR: ₩4,540,000 (콤마, 정수) / US: $4,540.00 (소수점 2자리)
+function fmtWon(amount, data) {
+  const sym = data?.currencySymbol || '₩'
+  const v = Number(amount) || 0
+  if ((data?.currency || 'KRW') === 'KRW') {
+    return `${sym}${Math.round(v).toLocaleString()}`
+  }
+  return `${sym}${v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+}
+
 function scoreColor(score) {
   if (score === null || score === undefined) return 'var(--text-dim)'
   if (score >= 76) return 'var(--gold-bright)'
@@ -275,6 +285,7 @@ export default function Survey() {
       </header>
 
       {loading && !data && <LoadingMascot text="측량 중…" />}
+      {(saving || (refreshing && data)) && <LoadingMascot variant="screenblur" text="광맥을 측량하는 중…" />}
       {error && !data && <div className="center-msg err">백엔드 연결 실패: {error}</div>}
       {locked && <LockedOverlay reason={data.reason} />}
 
@@ -298,6 +309,24 @@ export default function Survey() {
               투자권유 아님 · 점수 낮음≠나쁜 포트폴리오 · {mode === 'basic' ? '우열이 아닌 사실 스냅샷' : '사용자가 설정한 렌즈'}
             </div>
           </div>
+
+          {/* ── 점수 해석 글 (규칙 기반, 투자권유 아님) ── */}
+          {data.interpretation && (
+            <section className="interp-block">
+              <div className="interp-row">
+                <span className="interp-dot fact" />
+                <p className="interp-text">{data.interpretation.fact}</p>
+              </div>
+              <div className="interp-row">
+                <span className="interp-dot shape" />
+                <p className="interp-text">{data.interpretation.shape}</p>
+              </div>
+              <div className="interp-row">
+                <span className="interp-dot tip" />
+                <p className="interp-text interp-tip">{data.interpretation.suggestion}</p>
+              </div>
+            </section>
+          )}
 
           {/* ── 구성요소 분해 ── */}
           <section className="card">
@@ -400,6 +429,68 @@ export default function Survey() {
               </div>
             ))}
           </section>
+
+          {/* ── 계좌 구성 (사실 정보 — 점수와 무관) ── */}
+          {data.account && (
+            <section className="card account-card">
+              <div className="card-title">
+                계좌 구성
+                <span className="card-title-sub">사실 정보 · 점수와 무관</span>
+              </div>
+
+              <div className="acct-summary">
+                <div className="acct-stat">
+                  <span className="acct-label">총 매수금액</span>
+                  <span className="acct-val">{fmtWon(data.account.totalPurchase, data)}</span>
+                </div>
+                <div className="acct-stat">
+                  <span className="acct-label">
+                    예수금
+                    {data.account.cashProvisional && <span className="acct-prov">잠정</span>}
+                  </span>
+                  <span className="acct-val">{fmtWon(data.account.cash, data)}</span>
+                </div>
+                <div className="acct-stat">
+                  <span className="acct-label">현금비중</span>
+                  <span className="acct-val">{data.account.cashWeight}%</span>
+                </div>
+              </div>
+              {data.account.cashProvisional && (
+                <div className="acct-prov-note">예수금은 잠정값으로 키움 앱 표시값과 다를 수 있습니다 (대조 전).</div>
+              )}
+
+              {/* 종목별 비중 (총자산 기준) */}
+              <div className="acct-positions">
+                {data.account.positions.map(p => (
+                  <div className="acct-pos" key={p.ticker}>
+                    <div className="acct-pos-head">
+                      <span className="acct-pos-name">{p.name}</span>
+                      {p.concentrated && <span className="concentr-tag">집중도 높음</span>}
+                      <span className="acct-pos-weight">{p.weight}%</span>
+                    </div>
+                    <div className="acct-pos-sub">
+                      {p.qty.toLocaleString()}주 · {fmtWon(p.evalAmount, data)}
+                    </div>
+                    <div className="acct-pos-bar">
+                      <div className="acct-pos-fill" style={{ width: `${Math.min(100, p.weight)}%` }} />
+                    </div>
+                  </div>
+                ))}
+                {/* 현금 막대 */}
+                <div className="acct-pos cash-row">
+                  <div className="acct-pos-head">
+                    <span className="acct-pos-name">예수금(현금)</span>
+                    <span className="acct-pos-weight">{data.account.cashWeight}%</span>
+                  </div>
+                  <div className="acct-pos-bar">
+                    <div className="acct-pos-fill cash" style={{ width: `${Math.min(100, data.account.cashWeight)}%` }} />
+                  </div>
+                </div>
+              </div>
+
+              <div className="acct-note">{data.account.note}</div>
+            </section>
+          )}
 
           {/* ── 렌즈 설명 ── */}
           <div className="lens-note">{data.lens}</div>

@@ -136,6 +136,64 @@ def delete_user_themes(market: str) -> None:
         db.commit()
 
 
+# ── 계좌 구성 (사실 정보 — 점수와 무관) ─────────────────────────────────────────
+
+# 집중도 "사실" 팩트 태그 기준 (단일 종목 비중). "분산하세요" 권유 아님 — 사실 표기만.
+_CONCENTRATION_THRESHOLD = 40.0
+
+
+def _build_account(market: str, provider) -> dict | None:
+    """계좌 구성 정보 — 총매수·예수금·현금비중·종목별 비중(총자산 기준).
+
+    ★ 점수에 일절 반영하지 않는다(현금 많아도 감점 0 — 보수적 투자는 스타일).
+    비중 기준 = 총자산(주식 평가총액 + 예수금) → 현금비중 + 종목비중 합 = 100%.
+    """
+    summary = provider.get_account_summary(market)
+    if not summary:
+        return None
+
+    holdings = provider.get_holdings(market)
+    cash = summary.get("cash", 0)
+    total_eval = summary.get("totalEval", 0) or sum(
+        float(h["qty"]) * float(h["current_price"]) for h in holdings
+    )
+    total_assets = total_eval + cash
+
+    positions = []
+    for h in holdings:
+        eval_amt = float(h["qty"]) * float(h["current_price"])
+        w = (eval_amt / total_assets * 100) if total_assets > 0 else 0.0
+        # 집중도 판정은 주식평가총액 기준 — 예수금이 많아도 종목 자체 비중으로 사실 표기
+        w_stock = (eval_amt / total_eval * 100) if total_eval > 0 else 0.0
+        positions.append({
+            "ticker": h["ticker"],
+            "name": h["name"],
+            "qty": int(h["qty"]),
+            "evalAmount": round(eval_amt),
+            "weight": round(w, 1),
+            "concentrated": w_stock >= _CONCENTRATION_THRESHOLD,
+        })
+    positions.sort(key=lambda p: p["evalAmount"], reverse=True)
+
+    cash_weight = (cash / total_assets * 100) if total_assets > 0 else 0.0
+
+    return {
+        "totalPurchase": summary.get("totalPurchase", 0),
+        "totalEval": round(total_eval),
+        "cash": cash,
+        "cashProvisional": summary.get("cashProvisional", True),
+        "totalAssets": round(total_assets),
+        "cashWeight": round(cash_weight, 1),
+        "concentrationThreshold": _CONCENTRATION_THRESHOLD,
+        "positions": positions,
+        "note": (
+            "사실 정보입니다. 현금 비중은 점수에 반영되지 않으며, "
+            "보수적 구성도 하나의 투자 스타일입니다(우열 아님). "
+            "예수금은 잠정값으로 키움 앱 표시값과 다를 수 있습니다."
+        ),
+    }
+
+
 # ── 측량소 빌드 ──────────────────────────────────────────────────────────────
 
 def build_survey(market: str) -> dict:
@@ -157,5 +215,6 @@ def build_survey(market: str) -> dict:
         "currency": cur["currency"],
         "currencySymbol": cur["symbol"],
         **breakdown,
+        "account": _build_account(market, provider),
         "disclaimer": common.DISCLAIMER,
     }

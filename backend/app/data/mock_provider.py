@@ -52,3 +52,16 @@ class MockProvider(DataProvider):
             "006400": 41.0,
         }
         return {t: _mock[t] for t in tickers if t in _mock}
+
+    def get_account_summary(self, market: str) -> dict | None:
+        if market != "KR":
+            return None
+        holdings = self.get_holdings(market)
+        total_eval = sum(h["qty"] * h["current_price"] for h in holdings)
+        total_purchase = sum(h["qty"] * h["avg_price"] for h in holdings)
+        return {
+            "totalPurchase": total_purchase,
+            "totalEval": total_eval,
+            "cash": 1_500_000,   # mock 예수금
+            "cashProvisional": True,
+        }

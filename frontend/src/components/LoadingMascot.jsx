@@ -2,10 +2,14 @@
 // fullscreen=true: 전체 화면 블러 오버레이. false(기본): 부모 영역 내 인라인.
 export default function LoadingMascot({
   fullscreen = false,
+  variant,          // 'screenblur' | undefined
   text = '광맥을 채굴하는 중…',
 }) {
+  const cls = variant === 'screenblur'
+    ? 'loading-screenblur'
+    : fullscreen ? 'loading-fullscreen' : 'loading-overlay'
   return (
-    <div className={fullscreen ? 'loading-fullscreen' : 'loading-overlay'}>
+    <div className={cls}>
       {/* ── 캐릭터 교체 포인트 ── 이 div 안의 내용을 이미지/애니메이션으로 대체 가능 */}
       <div className="loading-mascot">
         <div className="loading-spinner" />
