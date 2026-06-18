@@ -5,7 +5,6 @@ import { scene } from '../assets'
 import { money } from '../utils/format'
 import Miner from './Miner'
 
-
 // 금괴더미 3단계 — 평가금액(원) 기준. KR: 1천만↓소/1천만~1억중/1억↑대
 function goldPileSrc(goldAmount) {
   if (goldAmount >= 100_000_000) return scene.goldLarge
@@ -48,8 +47,9 @@ function AuroraSparkles({ place, strong = false }) {
 // 좌표는 씬 px(≈390×844) 기준 → %로 변환해 배치. 끝점이 금괴더미(≈117,521).
 const SCENE_W = 390
 const SCENE_H = 844
-const PATH_AUTO = [[195, 440], [140, 480], [117, 521]] // 광맥 → 금괴더미
-const PATH_HARVEST = [[203, 690], [150, 606], [119, 523]] // 수레 → 금괴더미 (수레 중심에서 시작)
+// 클러스터를 +11%(≈93px/844) 내림에 맞춰 끝점 이동. 수확 수레는 제자리(시작점 유지).
+const PATH_AUTO = [[195, 533], [140, 573], [117, 614]] // 광맥 → 금괴더미
+const PATH_HARVEST = [[203, 690], [160, 655], [119, 616]] // 수레 → 금괴더미 (수레 중심에서 시작)
 const ARROW_ROT = 90 // 위 방향(▲) 삼각형을 진행방향으로 돌리는 보정각
 
 function arrowsAlong([p0, p1, p2], n) {
@@ -102,15 +102,22 @@ export default function MineScene({
       {/* L0 배경 */}
       <img className="layer l0-bg" src={scene.bgMine} alt="" />
 
-      {/* 광맥 오로라(뒤) → [2] 광맥 뒤 일꾼(z-index 뒤) → 광맥 → 오로라(앞) */}
+      {/* 광맥 오로라(뒤) → [2] 광맥 뒤 일꾼(z-index 뒤) → 레일 → 광맥 → 오로라(앞) */}
       <AuroraGlow place="vein" strong />
       <Miner variant="backleft" delayMs={620} />
+      {/* 작업3: 뒤쪽 카트 2개 — 광맥 결정보다 먼저 그려 결정 뒤로 감 (작게·어둡게) */}
+      <img className="layer cart-static cart-back-left"  src={scene.cart} alt="" aria-hidden="true" />
+      <img className="layer cart-static cart-back-right" src={scene.cart} alt="" aria-hidden="true" />
+
       <img className="layer l1-vein" src={scene.veinGold} alt="" />
       <AuroraSparkles place="vein" strong />
 
       {/* [1][2] 일꾼 — 광맥 좌/우(반전)에 바짝 붙여 캐기. 곡괭이 끝이 광맥 향함 */}
       <Miner variant="left" delayMs={0} />
       <Miner variant="right" delayMs={380} />
+
+      {/* 작업3: 앞쪽 카트 — 레일 앞편. 결정·일꾼 뒤에 그려 가장 앞으로 (크게) */}
+      <img className="layer cart-static cart-front" src={scene.cart} alt="" aria-hidden="true" />
 
       {/* [3-가] 자동 화살표 흐름: 광맥 → 금괴더미 (상시) */}
       <ArrowFlow className="flow-auto" path={PATH_AUTO} n={6} />

@@ -1,6 +1,7 @@
 """ORM 모델 — Phase 2 영구 장부의 스키마 골격 (v1 mock 은 미사용, 테이블만 생성).
 
-KR/US 완전 분리이므로 모든 레코드에 market 컬럼을 둔다 (CLAUDE.md §5).
+KR/US 완전 분리이므로 포트 레코드에 market 컬럼을 둔다 (CLAUDE.md §5).
+레벨/EXP만 예외 — 시장 통합(CLAUDE.md §4 예외 명시).
 """
 from sqlalchemy import Float, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
@@ -48,6 +49,24 @@ class Dividend(Base):
     ticker: Mapped[str] = mapped_column(String)
     name: Mapped[str] = mapped_column(String)
     amount: Mapped[float] = mapped_column(Float)  # 세후 입금액
+
+
+class ExpEvent(Base):
+    """EXP 원장 — 멱등성(중복 적립 방지) + 단조 증가 보장.
+
+    ref_key UNIQUE → 같은 이벤트를 재조회해도 1번만 적립된다.
+    exp 는 항상 ≥ 0 (감점 없음 → 손실 무강등 구조 보장).
+    CLAUDE.md §4: ₩액수 비례 금지. 시장 통합(KR/US 합산, §4 예외).
+    """
+
+    __tablename__ = "exp_events"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    source: Mapped[str] = mapped_column(String, index=True)   # "SELL" | "DIV"
+    ref_key: Mapped[str] = mapped_column(String, unique=True, index=True)
+    exp: Mapped[int] = mapped_column(Integer)
+    meta_json: Mapped[str] = mapped_column(String, default="{}")  # 부가 정보(JSON)
+    created_at: Mapped[str] = mapped_column(String)               # ISO 8601 UTC
 
 
 class UserTheme(Base):

@@ -11,6 +11,13 @@ import minerSwing1 from '@assets/scene/miner_swing_1.png'
 import minerSwing2 from '@assets/scene/miner_swing_2.png'
 import minerSwing3 from '@assets/scene/miner_swing_3.png'
 import goldIcon from '@assets/scene/gold_icon_hud.png'
+import cart from '@assets/scene/cart.png'           // 레일 위 정적 카트
+import gemBlue from '@assets/scene/gem_blue.png'     // 수익률 6단계 광물
+import gemPurple from '@assets/scene/gem_purple.png'
+import gemGreen from '@assets/scene/gem_green.png'
+import gemTeal from '@assets/scene/gem_teal.png'
+import gemOrange from '@assets/scene/gem_orange.png'
+import gemGold from '@assets/scene/gem_gold.png'
 
 import iron from '@assets/emblems/iron.png'
 import bronze from '@assets/emblems/bronze.png'
@@ -31,6 +38,14 @@ export const scene = {
   goldMedium,
   goldLarge,
   goldIcon,
+  cart,
+  // 수익률 6단계 광물 (HoldingChips GEM_TIERS와 연결)
+  gemBlue,
+  gemPurple,
+  gemGreen,
+  gemTeal,
+  gemOrange,
+  gemGold,
   // 일꾼 곡괭이질 4프레임 (0→3). 같은 자리에 겹쳐두고 프레임만 교체.
   minerSwing: [minerSwing0, minerSwing1, minerSwing2, minerSwing3],
 }

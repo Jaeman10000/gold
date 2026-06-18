@@ -295,13 +295,14 @@ class KiwoomClient(DataProvider):
         logger.info("kt00009 체결내역 %d 건 로드 (%s~%s)", len(trades), strt_dt, end_dt)
         return trades
 
-    def get_realized_pnl(self, market: str, days: int = 365) -> list[dict]:
-        """ka10073 기간별실현손익 — 최근 N일. 매도 없으면 빈 리스트."""
+    def get_realized_pnl(self, market: str, days: int = 88) -> list[dict]:
+        """ka10073 기간별실현손익 — 최근 N일. API 제한: 종료일 기준 3개월(≈90일) 이내.
+        매도 없으면 빈 리스트."""
         if market != "KR":
             return []
         from datetime import date, timedelta
         today = date.today()
-        strt_dt = (today - timedelta(days=days)).strftime("%Y%m%d")
+        strt_dt = (today - timedelta(days=min(days, 88))).strftime("%Y%m%d")
         end_dt = today.strftime("%Y%m%d")
 
         raw = self._call_acnt(
@@ -309,20 +310,30 @@ class KiwoomClient(DataProvider):
             body={"strt_dt": strt_dt, "end_dt": end_dt, "dmst_stex_tp": "NXT"},
         )
 
+        # 실제 응답 필드(2026-06 확인):
+        #   dt=거래일, stk_cd=종목코드, stk_nm=종목명,
+        #   cntr_qty=체결수량, cntr_pric=체결가(매도가), buy_uv=매수단가,
+        #   tdy_sel_pl=실현손익, pl_rt=수익률("+12.05" 형식)
         result = []
         for item in raw:
             ticker_raw = str(item.get("stk_cd", "")).strip()
             ticker = ticker_raw[1:] if ticker_raw.startswith("A") else ticker_raw
+            pl_rt_str = str(item.get("pl_rt", "0")).replace(",", "").replace("+", "").strip()
+            try:
+                return_rate = float(pl_rt_str or "0")
+            except ValueError:
+                return_rate = 0.0
             result.append({
+                "date": str(item.get("dt", "")).strip(),
                 "ticker": ticker,
                 "name": str(item.get("stk_nm", "")).strip(),
-                "realizedPnl": _to_int(item.get("rlzt_pl", item.get("rlzt_pnl", 0))),
-                "returnRate": float(str(item.get("rlzt_rt", "0")).replace(",", "") or 0),
-                "sellQty": _to_int(item.get("sel_qty", item.get("sell_qty", 0))),
-                "sellPrice": _to_int(item.get("sel_pric", item.get("sell_pric", 0))),
-                "buyPrice": _to_int(item.get("pur_pric", item.get("buy_pric", 0))),
+                "realizedPnl": _to_int(item.get("tdy_sel_pl", 0)),
+                "returnRate": return_rate,
+                "sellQty": _to_int(item.get("cntr_qty", 0)),
+                "sellPrice": _to_int(item.get("cntr_pric", 0)),
+                "buyPrice": _to_int(item.get("buy_uv", 0)),
             })
-        logger.info("ka10073 실현손익 %d 종목 (%s~%s)", len(result), strt_dt, end_dt)
+        logger.info("ka10073 실현손익 %d 건 (%s~%s)", len(result), strt_dt, end_dt)
         return result
 
     def get_dividends(self, market: str) -> list[dict]:

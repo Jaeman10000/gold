@@ -48,8 +48,8 @@ body {
 /* ============ [2] 살아있는 오로라 (코드, 이미지 아님) ============ */
 /* 오로라 컨테이너 — 광맥/금더미 중심에 배치. 자식 4레이어가 살아 움직임. */
 .aura-glow, .aura-spark { position: absolute; pointer-events: none; transform: translate(-50%, -50%); }
-.aura-vein { left: 50%; top: 46%; width: 64%; height: 46%; }
-.aura-gold { left: 30%; top: 62%; width: 32%; height: 26%; }
+.aura-vein { left: 50%; top: 57%; width: 64%; height: 46%; }
+.aura-gold { left: 30%; top: 73%; width: 32%; height: 26%; }
 
 /* 1) 펄스 글로우 — 호흡하듯 scale+opacity (가장 중요). 광맥을 가리지 않게 은은하게 */
 .aura-pulse {
@@ -108,14 +108,39 @@ body {
   50%      { transform: scale(1.15); opacity: 1; }
 }
 
-/* [1] 광맥: 화면 중앙, 셋 중 제일 큼(폭 ~62%), y~46% */
+/* [작업3] 광물 주위 정적 카트 3개 — 아이소메트릭 원근. (타원 레일 제거됨)
+   깊이는 z-index 대신 DOM 순서로 처리(MineScene): 뒤카트→결정→앞카트. */
+.cart-static {
+  width: 15vw; height: auto;
+  pointer-events: none;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,.6));
+}
+/* 앞쪽(카메라 가까운): 크게 */
+.cart-front {
+  left: 50%; top: 69.5%;
+  transform: translate(-50%, -50%) scale(1.06);
+}
+/* 좌측 뒤: 작게 + 살짝 어둡게 */
+.cart-back-left {
+  left: 18%; top: 58%;
+  transform: translate(-50%, -50%) scale(0.66);
+  filter: brightness(0.7) drop-shadow(0 3px 6px rgba(0,0,0,.7));
+}
+/* 우측 뒤: 작게 + 살짝 어둡게 */
+.cart-back-right {
+  left: 82%; top: 58%;
+  transform: translate(-50%, -50%) scale(0.66);
+  filter: brightness(0.7) drop-shadow(0 3px 6px rgba(0,0,0,.7));
+}
+
+/* [1] 광맥: 화면 중앙, 셋 중 제일 큼(폭 ~62%). 클러스터 하향으로 y~57% */
 .l1-vein {
-  left: 50%; top: 46%; width: 62%; transform: translate(-50%, -50%);
+  left: 50%; top: 57%; width: 62%; transform: translate(-50%, -50%);
   filter: drop-shadow(0 0 22px rgba(255, 210, 90, .85));
 }
-/* [1] 금괴더미(모은 금): 화면 왼쪽~중앙아래(x~30%, y~62%). 광맥보다 작게·수레보다 큼(폭 ~28%) */
+/* [1] 금괴더미(모은 금): 클러스터 +11% 하향에 맞춰 y~73%. 광맥보다 작게·수레보다 큼(폭 ~28%) */
 .l1-gold {
-  left: 30%; top: 62%; transform: translate(-50%, -50%);
+  left: 30%; top: 73%; transform: translate(-50%, -50%);
   width: 28%; height: auto;
   background: none; border: 0;                 /* 투명 PNG만 — 검은 박스 방지 */
   filter: drop-shadow(0 6px 10px rgba(0,0,0,.5));
@@ -124,9 +149,10 @@ body {
 /* [1][2] 일꾼 3명 — 바깥(.miner)=위치, 안쪽(.miner-rot)=rotate(진행방향). transform 분리.
    .miner 에 명시 height 를 줘서 발(bottom)·rotate 피벗·스파크 % 가 모두 올바른 기준을 갖게 함. */
 .miner { position: absolute; pointer-events: none; background: none; border: 0; opacity: 1; }
-.miner-left     { left: 21%;  bottom: 47%; width: 16%; height: 14%; }  /* 좌: 살짝 위로 */
-.miner-right    { right: 21%; bottom: 49%; width: 16%; height: 14%; }  /* 우: 반전 */
-.miner-backleft { left: 30%;  bottom: 55%; width: 13%; height: 11%; }  /* 광맥 뒤 좌상 */
+/* 클러스터 +11% 하향에 맞춰 일꾼도 같이 내림(bottom -11%p) */
+.miner-left     { left: 21%;  bottom: 36%; width: 16%; height: 14%; }  /* 좌 */
+.miner-right    { right: 21%; bottom: 38%; width: 16%; height: 14%; }  /* 우: 반전 */
+.miner-backleft { left: 30%;  bottom: 44%; width: 13%; height: 11%; }  /* 광맥 뒤 좌상 */
 
 .miner-rot { position: absolute; inset: 0; transform-origin: 50% 100%; }
 .miner-left     .miner-rot { transform: rotate(-20deg); }              /* 곡괭이 끝 → 광맥 */
@@ -257,18 +283,79 @@ body {
 /* ---------- 홈 헤더 패널 (3단 구조: 티어/칩/금액) ---------- */
 .home-header-panel {
   background: linear-gradient(180deg, rgba(12,8,4,.95) 0%, rgba(12,8,4,.90) 65%, rgba(12,8,4,0) 100%);
-  padding: 52px 16px 36px;
-  display: flex; flex-direction: column; gap: 14px;
+  padding: 52px 16px 28px;
+  display: flex; flex-direction: column; gap: 12px;
 }
 
-/* 1단: 티어 + 아이콘 */
+/* 1단: 레벨 배지 + 아이콘 */
 .h-row1 { display: flex; align-items: center; justify-content: space-between; }
-.h-tier-left { display: flex; align-items: center; gap: 10px; }
-.h-emblem { width: 40px; height: 40px; object-fit: contain; }
-.h-tier-name { display: block; font-size: 17px; font-weight: 800; color: var(--gold-bright); }
-.h-tier-rank { display: block; font-size: 11px; color: var(--text-dim); margin-top: 1px; }
 .h-icons { display: flex; align-items: center; gap: 10px; }
 .h-icon { font-size: 20px; cursor: pointer; user-select: none; line-height: 1; }
+
+/* 레벨 배지 — 광맥 결정(crystal) 컨셉 */
+.lv-badge-wrap { display: flex; align-items: center; gap: 11px; }
+.lv-badge {
+  position: relative;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  width: 52px; height: 60px;
+  /* 육각 결정 클립 */
+  clip-path: polygon(50% 0%, 94% 25%, 94% 75%, 50% 100%, 6% 75%, 6% 25%);
+  background: linear-gradient(155deg, #fce97a 0%, #e8b339 28%, #b8862b 60%, #7d5a1e 100%);
+  cursor: default; flex-shrink: 0;
+}
+/* 결정 내부 상단 패싯(빛 반사 느낌) */
+.lv-badge::before {
+  content: '';
+  position: absolute; top: 9px; left: 50%;
+  transform: translateX(-50%);
+  width: 55%; height: 28%;
+  background: linear-gradient(180deg, rgba(255,255,255,.38) 0%, transparent 100%);
+  clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+}
+.lv-label {
+  font-size: 8px; font-weight: 900; color: rgba(20,10,2,.6);
+  letter-spacing: 2px; text-transform: uppercase; line-height: 1; margin-bottom: 1px;
+  position: relative;
+}
+.lv-num {
+  font-size: 26px; font-weight: 900; font-style: italic;
+  color: #1a0a02; line-height: 1; letter-spacing: -2px;
+  text-shadow: 0 1px 0 rgba(255,255,255,.28), 0 -1px 0 rgba(0,0,0,.2);
+  position: relative;
+}
+.lv-badge-info { display: flex; flex-direction: column; gap: 2px; }
+.lv-badge-title { font-size: 14px; font-weight: 800; color: var(--gold-bright); line-height: 1; }
+.lv-badge-sub { font-size: 11px; color: var(--text-dim); }
+
+/* EXP 채굴 게이지 */
+.exp-gauge-wrap { display: flex; flex-direction: column; gap: 5px; }
+.exp-bar-track {
+  width: 100%; height: 9px;
+  background: rgba(232,179,57,.1);
+  border-radius: 5px; overflow: hidden;
+  border: 1px solid rgba(232,179,57,.2);
+  position: relative;
+}
+.exp-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #9a6a14 0%, #e8b339 45%, #fce97a 80%, #e8b339 100%);
+  border-radius: 5px;
+  transition: width 1s cubic-bezier(.4,0,.2,1);
+  position: relative; overflow: hidden;
+}
+/* 금이 출렁이는 shimmer */
+.exp-bar-fill::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,.32) 50%, transparent 100%);
+  animation: exp-shimmer 2.2s ease-in-out infinite;
+}
+@keyframes exp-shimmer {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(250%); }
+}
+.exp-info { display: flex; justify-content: space-between; align-items: center; }
+.exp-cur  { font-size: 10px; font-weight: 700; color: var(--gold); }
+.exp-next { font-size: 10px; color: var(--text-dim); }
 
 /* 2단: 3개 칩 균등 배치. 시장토글도 같은 높이 */
 .h-row2 { display: flex; gap: 8px; }
@@ -319,29 +406,66 @@ body {
 .pill-label { font-size: 14px; color: rgba(255,255,255,.55); font-weight: 500; }
 .pill-amount { font-size: 20px; font-weight: 800; }
 
-/* 개별주 칩 — 큰 칩, 가로 스크롤, 1/3 너비. touch-action으로 스와이프 확보 */
-.holding-chips-lg {
-  display: flex; flex-wrap: nowrap; gap: 10px;
-  overflow-x: auto; overflow-y: hidden;
-  padding: 4px 16px 8px;
-  scrollbar-width: none; -webkit-overflow-scrolling: touch;
-  touch-action: pan-x;
-  width: 100%; box-sizing: border-box;
+/* 개별주 칩 — 2개씩 페이지. › 탭으로 다음 페이지(순환). 고정폭. */
+.holding-chips-wrap {
+  position: relative;
+  width: 100%;
+  padding: 4px 14px 6px;
+  box-sizing: border-box;
 }
-.holding-chips-lg::-webkit-scrollbar { display: none; }
+/* 한 페이지(카드 2개) — 우측 화살표 공간 확보 위해 우패딩 */
+.holding-chips-page {
+  display: flex; gap: 10px;
+  padding-right: 40px;            /* › 버튼 자리 */
+  box-sizing: border-box;
+}
+/* 고정폭 카드 — 종목명 길이와 무관하게 폭 일정 */
 .holding-chip-lg {
-  flex: 0 0 calc(33vw - 10px);
-  padding: 14px 12px; border-radius: 14px;
+  flex: 1 1 0; min-width: 0;       /* 2개가 균등 분할, 화면 안에 양끝 수용 */
+  padding: 12px 12px; border-radius: 14px;
   background: rgba(20,16,11,.80); border: 1px solid var(--line);
   backdrop-filter: blur(4px);
-  display: flex; flex-direction: column; gap: 6px;
+  display: flex; flex-direction: row; align-items: center; gap: 8px;
   cursor: pointer; text-align: left;
 }
-.chip-lg-name { font-size: 14px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.chip-lg-rate { font-size: 18px; font-weight: 800; }
-.more-chip { align-items: center; justify-content: center; text-align: center; }
-.chip-lg-more { font-size: 18px; font-weight: 800; color: var(--gold-bright); }
-.chip-lg-more-sub { font-size: 11px; color: var(--text-dim); }
+.chip-lg-left { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0; }
+.chip-lg-name {
+  font-size: 13px; font-weight: 600; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;   /* 긴 이름 말줄임 */
+}
+.chip-lg-rate { font-size: 17px; font-weight: 800; }
+/* 수익률 6단계 광물 — 카드 우측에 안정감 있게 */
+.chip-mineral {
+  width: 46px; height: 46px; object-fit: contain;
+  flex-shrink: 0;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,.55));
+}
+/* 다음 페이지 화살표 — 카드 우측 바깥, 세로 중앙 */
+.chips-nav-btn {
+  position: absolute;
+  right: 10px; top: 50%; transform: translateY(-50%);
+  z-index: 20;
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: rgba(15,11,4,.92);
+  border: 2px solid rgba(232,179,57,.75);
+  color: #F7CF5A;
+  font-size: 20px; line-height: 1;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 0 12px rgba(232,179,57,.45), 0 2px 6px rgba(0,0,0,.7);
+}
+/* 페이지 점 인디케이터 */
+.chips-page-dots {
+  display: flex; justify-content: center; gap: 5px;
+  margin-top: 6px;
+}
+.chips-dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: rgba(255,255,255,.28);
+  transition: background .2s, width .2s;
+}
+.chips-dot.on { background: var(--gold-bright); width: 14px; border-radius: 3px; }
 
 /* 홈 디스클레이머 — 독 바로 위 */
 .home-disclaimer {
@@ -393,6 +517,76 @@ body {
 
 .export-row { display: flex; gap: 10px; }
 .ghost-btn { flex: 1; background: transparent; border: 1px dashed var(--line); color: var(--text-dim); padding: 11px; border-radius: 10px; font-size: 13px; }
+
+/* ── 금고: 누적 실현수익 요약 카드 ──────────────────────────────────────────── */
+.vault-summary-card {
+  background: linear-gradient(135deg, rgba(30,22,10,.95) 0%, rgba(20,15,6,.95) 100%);
+  border: 1px solid rgba(232,179,57,.3);
+  border-radius: 16px; padding: 18px 16px 14px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.vs-label { font-size: 11px; color: var(--text-dim); font-weight: 600; letter-spacing: .3px; }
+.vs-total { font-size: 30px; font-weight: 900; line-height: 1; letter-spacing: -1px; }
+.vs-breakdown { display: flex; align-items: center; gap: 12px; margin-top: 2px; }
+.vs-item { display: flex; flex-direction: column; gap: 2px; }
+.vs-item-label { font-size: 10px; color: var(--text-dim); }
+.vs-item-val { font-size: 14px; font-weight: 700; color: var(--text); }
+.vs-plus { font-size: 18px; color: var(--text-dim); opacity: .5; margin-top: 10px; }
+.vs-note { font-size: 10px; color: var(--text-dim); opacity: .6; margin-top: 2px; }
+
+/* ── 금고: 익절 기록 테이블 ─────────────────────────────────────────────────── */
+.pnl-table { display: flex; flex-direction: column; }
+.pnl-header {
+  display: flex; align-items: center; gap: 6px;
+  padding: 0 2px 7px; border-bottom: 1px solid var(--line);
+  font-size: 10px; color: var(--text-dim); font-weight: 600;
+}
+.ph-date  { min-width: 34px; }
+.ph-name  { flex: 1; }
+.ph-rate  { min-width: 44px; text-align: right; }
+.ph-pnl   { min-width: 76px; text-align: right; }
+.ph-exp   { min-width: 36px; text-align: right; }
+
+.pnl-row {
+  display: flex; align-items: center; gap: 6px;
+  padding: 9px 2px; border-bottom: 1px solid var(--line); font-size: 12px;
+}
+.pnl-row:last-child { border-bottom: none; }
+.pnl-date  { min-width: 34px; color: var(--text-dim); font-size: 11px; flex-shrink: 0; }
+.pnl-name  { flex: 1; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pnl-rate  { min-width: 44px; text-align: right; font-weight: 700; flex-shrink: 0; }
+.pnl-pnl   { min-width: 76px; text-align: right; flex-shrink: 0; }
+.pnl-exp-chip {
+  min-width: 36px; text-align: center; flex-shrink: 0;
+  font-size: 10px; font-weight: 800; padding: 2px 5px; border-radius: 5px;
+}
+.pnl-exp-chip.pos  { background: rgba(232,179,57,.15); color: var(--gold); }
+.pnl-exp-chip.zero { color: var(--text-dim); }
+
+/* ── 금고: 빈 상태 안내 ─────────────────────────────────────────────────────── */
+.vault-empty {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 6px; padding: 20px 10px 12px; text-align: center;
+}
+.vault-empty-icon { font-size: 30px; opacity: .5; margin-bottom: 4px; }
+.vault-empty p { font-size: 13px; color: var(--text-dim); line-height: 1.6; margin: 0; }
+.vault-empty-sub { font-size: 11px !important; opacity: .75; }
+.vault-import-btn {
+  margin-top: 8px; padding: 9px 18px;
+  background: none; border: 1px solid rgba(232,179,57,.35);
+  color: var(--gold); border-radius: 10px; font-size: 13px;
+  cursor: pointer; font-weight: 600;
+}
+.vault-import-btn:hover { background: rgba(232,179,57,.08); }
+.vault-import-btn:disabled { opacity: .5; cursor: default; }
+.vault-import-msg {
+  text-align: center; font-size: 12px; color: var(--profit);
+  background: rgba(76,198,106,.08); border: 1px solid rgba(76,198,106,.2);
+  border-radius: 8px; padding: 8px 14px;
+}
+
+/* ledger-row에 날짜 클래스 추가 */
+.lr-date { color: var(--text-dim); font-size: 11px; min-width: 80px; flex-shrink: 0; }
 
 /* ---------- 측량소 v2 (2모드) ---------- */
 /* 헤더 모드 배지 */
@@ -766,10 +960,20 @@ body {
 .esc-ticker { font-size: 12px; color: var(--text-dim); font-family: monospace; }
 
 /* 비중 슬라이더 */
+.explore-weight-arrow-row {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 12px; padding: 10px 12px;
+  background: rgba(232,179,57,.06); border-radius: 10px;
+}
+.ewa-cur { font-size: 13px; color: var(--text-dim); }
+.ewa-arr { color: var(--text-dim); font-size: 14px; }
+.ewa-target { font-size: 13px; color: var(--text); }
+.ewa-target-num { font-size: 18px; font-weight: 900; color: var(--gold-bright); }
+
 .explore-weight-row { display: flex; align-items: center; gap: 12px; margin: 10px 0 4px; }
 .explore-slider { flex: 1; accent-color: var(--gold); }
 .explore-weight-val { font-size: 24px; font-weight: 900; color: var(--gold-bright); min-width: 46px; text-align: right; }
-.explore-weight-note { font-size: 12px; color: var(--text-dim); margin-bottom: 14px; }
+.explore-weight-note { font-size: 12px; color: var(--text-dim); margin-bottom: 14px; line-height: 1.6; }
 .explore-sim-btn {
   width: 100%; padding: 14px; border-radius: 12px;
   background: var(--gold); color: #1a1206; font-size: 16px; font-weight: 800;
@@ -827,3 +1031,36 @@ body {
 .explore-trust-note { font-size: 11px; color: var(--text-dim); opacity: .75; line-height: 1.4; }
 .explore-case-note { font-size: 11px; color: var(--text-dim); text-align: center; }
 .explore-error { color: var(--loss); text-align: center; padding: 16px; font-size: 13px; }
+
+/* 탐사 소개 (항상 표시) */
+.explore-intro { padding: 6px 2px 2px; }
+.explore-intro-title { font-size: 15px; font-weight: 800; color: var(--gold-bright); margin-bottom: 5px; }
+.explore-intro-desc { font-size: 12px; color: var(--text-dim); line-height: 1.6; }
+
+/* 사용법 단계 힌트 (종목 선택 전만) */
+.explore-steps {
+  display: flex; align-items: center; gap: 4px;
+  margin-bottom: 8px; flex-wrap: wrap;
+}
+.ex-step {
+  display: flex; align-items: center; gap: 4px;
+  font-size: 12px; color: var(--text-dim); font-weight: 600;
+}
+.ex-step-num {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: rgba(232,179,57,.18); color: var(--gold);
+  font-size: 10px; font-weight: 800; flex-shrink: 0;
+}
+.ex-step-arrow { color: var(--text-dim); font-size: 11px; opacity: .5; }
+
+/* 빈 상태 일러스트 */
+.explore-empty-state {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 12px; padding: 36px 16px; text-align: center;
+}
+.explore-empty-icon { font-size: 40px; opacity: .55; }
+.explore-empty-text {
+  font-size: 14px; color: var(--text-dim); line-height: 1.7;
+  font-weight: 500;
+}

@@ -1,37 +1,44 @@
-// 홈 헤더 패널 — 3단 구조 (CLAUDE.md §5 HUD). 씬 위 오버레이.
-// 1단: 티어 엠블럼+이름 / 아이콘
+// 홈 헤더 패널 — 3단 구조 (CLAUDE.md §5 HUD).
+// 1단: 레벨 배지(결정 컨셉) + 아이콘 / EXP 채굴 게이지
 // 2단: 등급칩 · 시장토글 · 성향칩
-// 3단: 총 평가금액 (₩ 골드, 숫자 크게)
-import { emblems } from '../assets'
+// 3단: 총 평가금액
 import MarketToggle from './MarketToggle'
 
-const TIER_RANK = {
-  challenger: '상위 1%', grandmaster: '상위 3%', master: '상위 8%',
-  diamond: '상위 15%', platinum: '상위 25%', gold: '상위 40%',
-  silver: '상위 60%', bronze: '상위 80%', iron: '상위 100%',
-}
+export default function Hud({ data, goldOverride, refreshing, levelData }) {
+  const { veinGrade, disposition } = data
+  const goldText = goldOverride || data.goldAmountDisplay
 
-export default function Hud({ data, goldOverride, refreshing }) {
-  const { veinGrade, disposition, tier, goldAmountDisplay } = data
-  const emblemSrc = emblems[tier.emblem] || emblems.iron
-  const goldText = goldOverride || goldAmountDisplay
-
-  // "₩6,987,000" → { sym: '₩', num: '6,987,000' }
   const symMatch = String(goldText || '').match(/^([₩$])(.+)$/)
   const goldSym = symMatch ? symMatch[1] : ''
   const goldNum = symMatch ? symMatch[2] : (goldText || '')
 
-  const rankLabel = TIER_RANK[tier.emblem] || '광부 등급'
+  // 레벨 데이터 (없으면 기본값)
+  const level    = levelData?.level      ?? 1
+  const curExp   = levelData?.curLevelExp ?? 0
+  const needExp  = levelData?.needExp    ?? 100
+  const ratio    = levelData?.ratio      ?? 0
+  const isMax    = levelData?.isMax      ?? false
+
+  // 레벨이 높을수록 배지 글로우 강해짐 (Lv1=0.28, Lv99=0.9)
+  const glowA  = +(0.28 + (level / 99) * 0.62).toFixed(2)
+  const badgeShadow = `0 0 10px rgba(232,179,57,${glowA}), 0 0 22px rgba(232,179,57,${+(glowA * 0.5).toFixed(2)}), 0 2px 6px rgba(0,0,0,0.6)`
+
+  const pct      = Math.round(ratio * 100)
+  const expLeft  = Math.max(0, needExp - curExp)
 
   return (
     <div className="home-header-panel">
-      {/* 1단: 티어 / 아이콘 */}
+
+      {/* 1단: 레벨 배지 + 아이콘 */}
       <div className="h-row1">
-        <div className="h-tier-left">
-          <img className="h-emblem" src={emblemSrc} alt={tier.emblem} />
-          <div>
-            <span className="h-tier-name">{tier.name} {tier.division}</span>
-            <span className="h-tier-rank">광부 등급 · {rankLabel}</span>
+        <div className="lv-badge-wrap">
+          <div className="lv-badge" style={{ boxShadow: badgeShadow }}>
+            <span className="lv-label">LV</span>
+            <span className="lv-num">{level}</span>
+          </div>
+          <div className="lv-badge-info">
+            <span className="lv-badge-title">광부 레벨</span>
+            <span className="lv-badge-sub">꾸준히 굴린 기록</span>
           </div>
         </div>
         <div className="h-icons">
@@ -41,7 +48,20 @@ export default function Hud({ data, goldOverride, refreshing }) {
         </div>
       </div>
 
-      {/* 2단: 등급칩 · 시장토글(칩 형태) · 성향칩 */}
+      {/* EXP 채굴 게이지 */}
+      <div className="exp-gauge-wrap">
+        <div className="exp-bar-track" aria-label={`EXP ${pct}%`}>
+          <div className="exp-bar-fill" style={{ width: `${pct}%` }} />
+        </div>
+        <div className="exp-info">
+          <span className="exp-cur">{curExp.toLocaleString()} / {needExp.toLocaleString()} EXP</span>
+          <span className="exp-next">
+            {isMax ? '만렙 달성 ✦' : `다음 레벨까지 ${expLeft.toLocaleString()}`}
+          </span>
+        </div>
+      </div>
+
+      {/* 2단: 등급칩 · 시장토글 · 성향칩 */}
       <div className="h-row2">
         <span className="h-chip grade">{veinGrade.label} · {veinGrade.score}</span>
         <MarketToggle />
@@ -56,6 +76,7 @@ export default function Hud({ data, goldOverride, refreshing }) {
           <span className="h-amount-num">{goldNum}</span>
         </div>
       </div>
+
     </div>
   )
 }

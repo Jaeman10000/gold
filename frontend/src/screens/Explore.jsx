@@ -1,13 +1,23 @@
 // 탐사(what-if) 화면 — 가상 비중으로 활성 모드 점수 재계산 (CLAUDE.md §7).
 // 하드룰: 종목 추천 없음. 사용자 직접 입력한 종목만 시뮬. 고정 문구 항상 표시.
-import { useRef, useState } from 'react'
+import { useRef, useState, useMemo } from 'react'
 import { useMarket } from '../store/marketStore'
+import { useScreenData } from '../store/dataStore'
+
+// 한국어 조사 선택: 받침 있으면 "이", 없으면 "가"
+function particle(name) {
+  if (!name) return '이'
+  const code = name.charCodeAt(name.length - 1)
+  if (code < 0xAC00 || code > 0xD7A3) return '이'
+  return (code - 0xAC00) % 28 === 0 ? '가' : '이'
+}
 
 const FIXED_DISCLAIMER = '가정 시뮬레이션 · 투자권유 아님 · 사용자가 직접 입력한 종목 기준'
 
 // 상태: idle → searching → selected → simulating → result | error
 export default function Explore() {
   const { market } = useMarket()
+  const { data: portfolioData } = useScreenData('portfolio', market)
   const [query, setQuery] = useState('')
   const [searchState, setSearchState] = useState('idle') // 'idle'|'loading'|'done'
   const [searchResults, setSearchResults] = useState([])
@@ -112,6 +122,18 @@ export default function Explore() {
   const deltaAbs = simResult ? Math.abs(simResult.delta) : 0
   const deltaSign = simResult && simResult.delta > 0 ? '▲ +' : simResult && simResult.delta < 0 ? '▼ −' : '─ '
 
+  const isIdle = !selected && simState === 'idle'
+
+  // 선택 종목의 현재 실제 비중 (보유 중인 경우에만)
+  const currentWeight = useMemo(() => {
+    if (!selected || !portfolioData?.holdings?.length) return null
+    const h = portfolioData.holdings.find(h => h.ticker === selected.ticker)
+    if (!h) return null
+    const total = portfolioData.holdings.reduce((s, x) => s + (x.evalAmount || 0), 0)
+    if (!total) return null
+    return Math.round((h.evalAmount / total) * 100)
+  }, [selected, portfolioData])
+
   return (
     <div className="screen explore-screen">
       <div className="screen-header">
@@ -121,12 +143,33 @@ export default function Explore() {
 
       <div className="explore-body">
 
-        {/* 고정 문구 — 항상 최상단 */}
+        {/* 소개 — 처음 본 사용자용 */}
+        <div className="explore-intro">
+          <div className="explore-intro-title">만약에 시뮬레이션</div>
+          <div className="explore-intro-desc">
+            종목을 넣어 가상으로 비중을 조정하면, 내 광맥 점수가 어떻게 달라지는지 미리 볼 수 있습니다.
+            실제 매매와는 무관한 가정입니다.
+          </div>
+        </div>
+
+        {/* 고정 문구 */}
         <div className="explore-disclaimer-top">{FIXED_DISCLAIMER}</div>
 
         {/* ① 종목 검색 */}
         <section className="card explore-search-card">
           <div className="card-title">종목 입력</div>
+
+          {/* 사용법 힌트 — 종목 선택 전에만 */}
+          {isIdle && (
+            <div className="explore-steps">
+              <span className="ex-step"><span className="ex-step-num">①</span>종목 입력</span>
+              <span className="ex-step-arrow">→</span>
+              <span className="ex-step"><span className="ex-step-num">②</span>비중 설정</span>
+              <span className="ex-step-arrow">→</span>
+              <span className="ex-step"><span className="ex-step-num">③</span>점수 비교</span>
+            </div>
+          )}
+
           <div className="explore-search-note">
             추천 종목 없음 · 직접 입력한 종목만 시뮬
           </div>
@@ -178,13 +221,30 @@ export default function Explore() {
           )}
         </section>
 
+        {/* 빈 상태 안내 — 검색어도 선택도 없을 때 */}
+        {!selected && !query && simState === 'idle' && (
+          <div className="explore-empty-state">
+            <div className="explore-empty-icon">🧭</div>
+            <p className="explore-empty-text">
+              보유 종목의 비중을 바꾸거나,<br />새 종목을 더했을 때를 가정해 보세요.
+            </p>
+          </div>
+        )}
+
         {/* ② 비중 슬라이더 — 종목 선택 후 표시 */}
         {selected && (
           <section className="card explore-weight-card">
-            <div className="card-title">
-              가상 비중 설정
-              <span className="card-title-sub">재조정 후 포트폴리오 내 비중</span>
+            <div className="card-title">가상 비중 설정</div>
+
+            {/* 현재 → 가정 비중 표시 */}
+            <div className="explore-weight-arrow-row">
+              {currentWeight !== null
+                ? <><span className="ewa-cur">현재 <b>{currentWeight}%</b></span><span className="ewa-arr">→</span></>
+                : <><span className="ewa-cur">신규 종목</span><span className="ewa-arr">→</span></>
+              }
+              <span className="ewa-target">가정 <b className="ewa-target-num">{weight}%</b></span>
             </div>
+
             <div className="explore-weight-row">
               <input
                 type="range"
@@ -195,10 +255,10 @@ export default function Explore() {
               />
               <span className="explore-weight-val">{weight}%</span>
             </div>
+
             <div className="explore-weight-note">
-              {weight === 0
-                ? '0% = 이 종목을 제외한 시뮬레이션'
-                : `기존 종목들이 합산 ${100 - weight}%로 조정됩니다`}
+              {selected.name}{particle(selected.name)} 포트폴리오의 <b>{weight}%</b>를 차지한다고 가정합니다.
+              나머지 종목들의 비중은 자동으로 줄어들어 전체 합이 100%가 됩니다.
             </div>
 
             <button

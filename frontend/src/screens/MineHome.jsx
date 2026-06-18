@@ -1,5 +1,5 @@
 // 광산(홈) — 풀블리드 금광 씬 + 그 위 오버레이(HUD/수익률/칩/디스클레이머). CLAUDE.md §7.
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import { useScreenData } from '../store/dataStore'
 import { useMarket } from '../store/marketStore'
 import MineScene from '../components/MineScene'
@@ -23,6 +23,11 @@ export default function MineHome() {
   const [goldPop, setGoldPop] = useState(false)
   const [bonus, setBonus] = useState(0)
   const rafRef = useRef(0)
+  const [levelData, setLevelData] = useState(null)
+
+  useEffect(() => {
+    fetch('/api/level').then(r => r.json()).then(setLevelData).catch(() => {})
+  }, [])
 
   const locked = data?.status === 'locked'
   const effectivePending = pendingOverride !== null ? pendingOverride : data?.pendingDividend || 0
@@ -93,7 +98,7 @@ export default function MineHome() {
         <>
           {/* 헤더 패널 + 수익률 알약 + 종목 칩 (세로 스택) */}
           <div className="home-overlay">
-            <Hud data={data} goldOverride={goldStr} refreshing={refreshing} />
+            <Hud data={data} goldOverride={goldStr} refreshing={refreshing} levelData={levelData} />
             <div className="home-pill-chips">
               <ReturnPanel data={data} onExpand={() => setSheetOpen(true)} />
               <HoldingChips
