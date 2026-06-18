@@ -1,27 +1,32 @@
-// 수익률 패널 (CLAUDE.md §5). 손실=레드, 수익=그린 — 테두리·숫자·금액 통일.
-import { formatAmount, pct, profitColor } from '../utils/format'
+// 수익률 알약 (CLAUDE.md §5). 손실=레드, 수익=그린.
+// 형식: "▼ 2.0% 평가손실 −₩141,998" — 알약 크기, 중앙 배치.
+import { formatAmount, profitColor } from '../utils/format'
 
 export default function ReturnPanel({ data, onExpand }) {
   const { returnRate, evalProfit, market } = data
   const up = returnRate >= 0
   const color = profitColor(returnRate)
   const glowRgb = up ? '76,198,106' : '226,101,92'
-  const profitStr = (evalProfit > 0 ? '+' : '') + formatAmount(market, evalProfit)
+
+  const absRateStr = Math.abs(returnRate).toFixed(1) + '%'
+  const rateLabel = up ? '평가수익' : '평가손실'
+  const profitSign = up ? '+' : '−'
+  const profitAbs = formatAmount(market, Math.abs(evalProfit))
 
   return (
     <button
-      className="return-panel"
+      className="return-pill"
       style={{
         borderColor: color,
-        boxShadow: `0 0 10px rgba(${glowRgb},.65), 0 0 22px rgba(${glowRgb},.4), inset 0 0 12px rgba(${glowRgb},.18)`,
+        color,
+        boxShadow: `0 0 8px rgba(${glowRgb},.5), 0 0 18px rgba(${glowRgb},.3)`,
       }}
       onClick={onExpand}
     >
-      <span className="rp-rate" style={{ color }}>
-        {up ? '▲' : '▼'} {pct(returnRate)}
-      </span>
-      <span className="rp-profit" style={{ color }}>{profitStr}</span>
-      <span className="rp-caret">›</span>
+      <span className="pill-arrow">{up ? '▲' : '▼'}</span>
+      <span className="pill-rate">{absRateStr}</span>
+      <span className="pill-label">{rateLabel}</span>
+      <span className="pill-amount">{profitSign}{profitAbs}</span>
     </button>
   )
 }

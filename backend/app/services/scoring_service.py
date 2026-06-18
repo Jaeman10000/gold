@@ -587,8 +587,122 @@ def survey_breakdown(
         result["interpretation"] = _build_interpretation_theme(
             score, contributions, active_labels, result["theme"]
         )
+        # 테마 맥락 (긍/부정 균형 — themes.json pros/cons, 투자권유 아님)
+        themes_all = load_themes()
+        themes_by_label = {t["label"]: t for t in themes_all}
+        result["themeContexts"] = [
+            {
+                "label": at.get("label", ""),
+                "pros": themes_by_label.get(at.get("label", ""), {}).get("pros", []),
+                "cons": themes_by_label.get(at.get("label", ""), {}).get("cons", []),
+            }
+            for at in active_themes
+        ]
 
     return result
+
+
+# ── 성향(disposition) 분류 — 관찰 가능한 구성 기준, 스타일 중립 ──────────────────
+# 하드룰: 우열 금지. 성향은 정체성. XP·점수와 무관. PER/PBR/ROE 미사용.
+_DISPOSITION_INFO = {
+    "공격형": {
+        "summary": "변동성을 감수하고 성장 잠재력을 추구하는 구성입니다.",
+        "chars": [
+            "특정 종목에 집중된 경향이 있습니다.",
+            "단기 변동폭이 상대적으로 클 수 있습니다.",
+            "성장 기대가 높은 구성일 수 있습니다.",
+        ],
+        "note": "공격형은 우열이 아닌 투자 스타일입니다. 안정형·하이브리드와 우열이 없습니다.",
+    },
+    "안정형": {
+        "summary": "여러 종목에 분산하고 안정성을 중시하는 구성입니다.",
+        "chars": [
+            "종목 분산이 넓어 개별 충격이 완충될 수 있습니다.",
+            "변동성이 상대적으로 낮은 경향이 있습니다.",
+            "시장 대비 상승폭이 제한될 수 있습니다.",
+        ],
+        "note": "안정형은 우열이 아닌 투자 스타일입니다. 공격형·하이브리드와 우열이 없습니다.",
+    },
+    "회피형": {
+        "summary": "현금 비중이 높고 주식 노출을 최소화하는 구성입니다.",
+        "chars": [
+            "현금·예수금 비중이 높아 가격 변동 노출이 낮습니다.",
+            "기회 손실(기회비용)이 발생할 수 있습니다.",
+            "보수적 시장 판단 또는 매수 대기 상태를 반영합니다.",
+        ],
+        "note": "회피형은 우열이 아닌 투자 스타일입니다. 공격형·안정형과 우열이 없습니다.",
+    },
+    "하이브리드": {
+        "summary": "집중과 분산, 성장과 안정이 혼합된 구성입니다.",
+        "chars": [
+            "한 가지 성향에 치우치지 않은 균형 잡힌 구성입니다.",
+            "분산도와 집중도가 중간 범위에 위치합니다.",
+            "다양한 시장 환경에 유연하게 반응할 수 있습니다.",
+        ],
+        "note": "하이브리드는 우열이 아닌 투자 스타일입니다. 다른 유형과 우열이 없습니다.",
+    },
+}
+
+
+def _classify_disposition(
+    num_stocks: int,
+    max_stock_weight_pct: float,
+    cash_weight_pct: float,
+) -> tuple[str, list[str]]:
+    """관찰 가능한 구성 기준으로 성향 분류. Phase 4에서 변동성·업종 고도화 예정.
+
+    하드룰: 우열 없음. 스타일 정체성만. 손실/수익 금액 미사용.
+    """
+    factors = [
+        f"보유 종목 수 {num_stocks}개",
+        f"최대 단일 종목 비중 {round(max_stock_weight_pct, 1)}% (주식평가 기준)",
+        f"현금 비중 {round(cash_weight_pct, 1)}%",
+    ]
+    if cash_weight_pct >= 35.0:
+        return "회피형", factors
+    if num_stocks <= 3 and max_stock_weight_pct >= 40.0:
+        return "공격형", factors
+    if num_stocks >= 8 and max_stock_weight_pct < 30.0:
+        return "안정형", factors
+    return "하이브리드", factors
+
+
+def build_disposition_info(holdings: list, account: dict | None) -> dict:
+    """포트폴리오 구성 기반 성향 판정 + 중립 설명.
+
+    하드룰: 스타일 우열 금지. 점수·XP 무관. 매수/매도 조언 금지.
+    """
+    num_stocks = len(holdings)
+    if account and account.get("positions"):
+        positions = account["positions"]
+        total_eval = sum(p["evalAmount"] for p in positions)
+        max_stock_w = (
+            max(p["evalAmount"] for p in positions) / total_eval * 100
+            if total_eval > 0 else 0.0
+        )
+        cash_w = account.get("cashWeight", 0.0)
+    elif num_stocks > 0:
+        max_stock_w = 100.0 / num_stocks
+        cash_w = 0.0
+    else:
+        info = _DISPOSITION_INFO["하이브리드"]
+        return {
+            "type": "하이브리드",
+            **info,
+            "factors": [],
+            "factorsNote": "보유 종목이 없어 성향 판정이 어렵습니다.",
+        }
+
+    label, factors = _classify_disposition(num_stocks, max_stock_w, cash_w)
+    info = _DISPOSITION_INFO.get(label, _DISPOSITION_INFO["하이브리드"])
+    return {
+        "type": label,
+        "summary": info["summary"],
+        "chars": info["chars"],
+        "note": info["note"],
+        "factors": factors,
+        "factorsNote": "현재 관찰 가능한 구성 기준입니다. 변동성·업종 기반 상세 분류는 추후 업데이트됩니다.",
+    }
 
 
 def _empty_response(mode: str, themes: list[dict] | None) -> dict:

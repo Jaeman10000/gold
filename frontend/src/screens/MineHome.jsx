@@ -7,7 +7,6 @@ import Hud from '../components/Hud'
 import ReturnPanel from '../components/ReturnPanel'
 import HoldingChips from '../components/HoldingChips'
 import HoldingsSheet from '../components/HoldingsSheet'
-import MarketToggle from '../components/MarketToggle'
 import LockedOverlay from '../components/LockedOverlay'
 import LoadingMascot from '../components/LoadingMascot'
 import { goldDisplay } from '../utils/format'
@@ -72,13 +71,6 @@ export default function MineHome() {
         onClaim={handleClaim}
       />
 
-      {/* 상단 중앙 시장 토글 */}
-      <div className="top-center">
-        <MarketToggle />
-        {/* 새로고침 중 미니 스피너 */}
-        {refreshing && <div className="refresh-spin" />}
-      </div>
-
       {/* [A] 시장 전환 시 화면 내 로딩 오버레이 (독 제외) */}
       {loading && !data && (
         <LoadingMascot text="시장 데이터를 불러오는 중…" />
@@ -99,14 +91,17 @@ export default function MineHome() {
 
       {!loading && !locked && data && (
         <>
-          <Hud data={data} goldOverride={goldStr} />
-          <div className="home-top-overlay">
-            <ReturnPanel data={data} onExpand={() => setSheetOpen(true)} />
-            <HoldingChips
-              holdings={data.topHoldings}
-              total={data.holdings.length}
-              onExpand={() => setSheetOpen(true)}
-            />
+          {/* 헤더 패널 + 수익률 알약 + 종목 칩 (세로 스택) */}
+          <div className="home-overlay">
+            <Hud data={data} goldOverride={goldStr} refreshing={refreshing} />
+            <div className="home-pill-chips">
+              <ReturnPanel data={data} onExpand={() => setSheetOpen(true)} />
+              <HoldingChips
+                holdings={data.topHoldings}
+                total={data.holdings.length}
+                onExpand={() => setSheetOpen(true)}
+              />
+            </div>
           </div>
           <div className="home-disclaimer">{data.disclaimer}</div>
           <HoldingsSheet

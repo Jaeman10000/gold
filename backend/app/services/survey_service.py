@@ -194,6 +194,14 @@ def _build_account(market: str, provider) -> dict | None:
     }
 
 
+# ── 성향 판정 (사실 기반 — 점수·XP와 무관, 스타일 중립) ────────────────────────
+
+def _build_disposition(market: str, provider, account: dict | None) -> dict:
+    """성향 판정 + 중립 설명. 하드룰: 우열 금지. 점수와 무관."""
+    holdings = provider.get_holdings(market)
+    return scoring_service.build_disposition_info(holdings, account)
+
+
 # ── 측량소 빌드 ──────────────────────────────────────────────────────────────
 
 def build_survey(market: str) -> dict:
@@ -209,12 +217,14 @@ def build_survey(market: str) -> dict:
         market, provider, mode=mode, themes=user_themes or None
     )
 
+    account = _build_account(market, provider)
     return {
         "status": "ok",
         "market": market,
         "currency": cur["currency"],
         "currencySymbol": cur["symbol"],
         **breakdown,
-        "account": _build_account(market, provider),
+        "account": account,
+        "disposition": _build_disposition(market, provider, account),
         "disclaimer": common.DISCLAIMER,
     }
