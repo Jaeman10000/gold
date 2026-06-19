@@ -27,7 +27,7 @@ def locked_response(market: str) -> dict:
     cur = currency_of(market)
     return {
         "status": "locked",
-        "reason": "데이터 소스 준비 중",
+        "reason": "현재 키움증권이 개인 투자자용 해외주식 REST API를 제공하지 않아, 미국 주식 자동 연동을 준비 중입니다.",
         "market": market,
         "currency": cur["currency"],
         "currencySymbol": cur["symbol"],

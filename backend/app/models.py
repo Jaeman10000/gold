@@ -39,7 +39,10 @@ class Trade(Base):
 
 
 class Dividend(Base):
-    """배당 기록 (수레 → 수확)."""
+    """배당 기록 (수레 → 수확).
+
+    source: 'csv'=수동 임포트 / 'dart_inferred'=DART 자동 추정 / 'manual'=직접 입력.
+    """
 
     __tablename__ = "dividends"
 
@@ -49,6 +52,7 @@ class Dividend(Base):
     ticker: Mapped[str] = mapped_column(String)
     name: Mapped[str] = mapped_column(String)
     amount: Mapped[float] = mapped_column(Float)  # 세후 입금액
+    source: Mapped[str | None] = mapped_column(String, default="csv", nullable=True)
 
 
 class ExpEvent(Base):
@@ -81,6 +85,16 @@ class AppMeta(Base):
 
     key: Mapped[str] = mapped_column(String, primary_key=True)
     value: Mapped[str] = mapped_column(String)
+
+
+class DataCache(Base):
+    """API 응답 DB 캐시 — 앱 시작 즉시 표시용 (cold start 속도 개선)."""
+
+    __tablename__ = "data_cache"
+
+    key: Mapped[str] = mapped_column(String, primary_key=True)   # e.g. "portfolio_KR"
+    data_json: Mapped[str] = mapped_column(String)                # JSON blob
+    cached_at: Mapped[str] = mapped_column(String)               # ISO8601 UTC
 
 
 class UserTheme(Base):

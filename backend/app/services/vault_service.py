@@ -7,7 +7,7 @@
 from app.data.provider import get_provider
 from app.db import SessionLocal
 from app.models import Dividend, Trade
-from app.services import common, meta_service
+from app.services import cache_service, common, meta_service
 
 
 def _db_trades(market: str) -> list[dict]:
@@ -28,7 +28,13 @@ def _db_dividends(market: str) -> list[dict]:
     try:
         rows = db.query(Dividend).filter_by(market=market).all()
         return [
-            {"date": r.date, "ticker": r.ticker, "name": r.name, "amount": r.amount}
+            {
+                "date": r.date,
+                "ticker": r.ticker,
+                "name": r.name,
+                "amount": r.amount,
+                "source": r.source or "csv",
+            }
             for r in rows
         ]
     finally:
@@ -83,10 +89,16 @@ def _group_realized_pnl(items: list[dict]) -> list[dict]:
     return sorted(result, key=lambda x: x["date"], reverse=True)
 
 
-def build_vault(market: str) -> dict:
+def build_vault(market: str, force: bool = False) -> dict:
     provider = get_provider()
     if not provider.is_market_available(market):
         return common.locked_response(market)
+
+    if not force:
+        hit = cache_service.get(f"vault_{market}")
+        if hit:
+            data, cached_at = hit
+            return {**data, "cachedAt": cached_at}
 
     cur = common.currency_of(market)
     trades = _get_merged_trades(market, provider)
@@ -104,7 +116,7 @@ def build_vault(market: str) -> dict:
     finally:
         db.close()
 
-    return {
+    result = {
         "status": "ok",
         "market": market,
         "currency": cur["currency"],
@@ -119,6 +131,9 @@ def build_vault(market: str) -> dict:
         "firstLinkDate": first_link_date,
         "disclaimer": common.DISCLAIMER,
     }
+    cached_at = cache_service.put(f"vault_{market}", result)
+    result["cachedAt"] = cached_at
+    return result
 
 
 def _fmt_trades(trades: list[dict]) -> list[dict]:

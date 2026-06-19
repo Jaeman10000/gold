@@ -7,7 +7,7 @@
 import json
 
 from app.data.provider import get_provider
-from app.services import common, scoring_service
+from app.services import cache_service, common, scoring_service
 
 
 # ── 테마 해석 (resolve) — 라벨/객체 → 자급식 객체 ───────────────────────────────
@@ -204,13 +204,25 @@ def _build_disposition(market: str, provider, account: dict | None) -> dict:
 
 # ── 측량소 빌드 ──────────────────────────────────────────────────────────────
 
-def build_survey(market: str) -> dict:
+def build_survey(market: str, force: bool = False) -> dict:
     provider = get_provider()
     if not provider.is_market_available(market):
         return common.locked_response(market)
 
-    cur = common.currency_of(market)
+    # 테마 변경 시 캐시 무효화 (user_themes 확인은 force 전에 수행)
     user_themes = get_user_themes(market)
+
+    if not force:
+        hit = cache_service.get(f"survey_{market}")
+        if hit:
+            data, cached_at = hit
+            # 테마 변경 감지: 캐시된 모드와 현재 모드가 다르면 무효화
+            cached_mode = data.get("mode")
+            current_mode = "theme" if user_themes else "basic"
+            if cached_mode == current_mode:
+                return {**data, "cachedAt": cached_at}
+
+    cur = common.currency_of(market)
     mode = "theme" if user_themes else "basic"
 
     breakdown = scoring_service.survey_breakdown(
@@ -218,13 +230,17 @@ def build_survey(market: str) -> dict:
     )
 
     account = _build_account(market, provider)
-    return {
+    result = {
         "status": "ok",
         "market": market,
         "currency": cur["currency"],
         "currencySymbol": cur["symbol"],
+        "mode": mode,
         **breakdown,
         "account": account,
         "disposition": _build_disposition(market, provider, account),
         "disclaimer": common.DISCLAIMER,
     }
+    cached_at = cache_service.put(f"survey_{market}", result)
+    result["cachedAt"] = cached_at
+    return result

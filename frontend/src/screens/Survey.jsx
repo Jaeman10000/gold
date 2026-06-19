@@ -8,6 +8,8 @@ import MarketToggle from '../components/MarketToggle'
 import LockedOverlay from '../components/LockedOverlay'
 import LoadingMascot from '../components/LoadingMascot'
 import ErrorState from '../components/ErrorState'
+import PullToRefresh from '../components/PullToRefresh'
+import { timeAgo } from '../utils/format'
 
 // 등급별 색상 (S~F)
 function gradeColor(grade) {
@@ -335,7 +337,7 @@ function ScoreExplainCard({ mode }) {
 
 export default function Survey() {
   const { market } = useMarket()
-  const { data, loading, refreshing, error } = useScreenData('survey', market)
+  const { data, loading, refreshing, error, cachedAt } = useScreenData('survey', market)
   const { refresh } = useDataStore()
 
   const [showSelector, setShowSelector] = useState(false)
@@ -366,6 +368,7 @@ export default function Survey() {
   }
 
   return (
+    <PullToRefresh onRefresh={() => refresh(market)} refreshing={refreshing}>
     <div className="screen survey">
       <header className="screen-header">
         <h2 className="survey-title">
@@ -386,6 +389,7 @@ export default function Survey() {
 
       {!loading && !locked && data && (
         <div className="survey-body">
+          {cachedAt && <div className="last-updated survey-last-updated">↻ {timeAgo(cachedAt)} 업데이트</div>}
 
           {/* ── 점수 히어로 ── */}
           <div className="score-hero">
@@ -646,5 +650,6 @@ export default function Survey() {
         />
       )}
     </div>
+    </PullToRefresh>
   )
 }

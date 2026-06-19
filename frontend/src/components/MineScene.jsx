@@ -1,8 +1,7 @@
 // 광산 씬 — 풀블리드 살아있는 디오라마 (CLAUDE.md §5). 구도 기준: docs/home_us.png
-// 광맥(중앙·최대) + 오로라 + 일꾼 2명(중앙 광맥 채굴) + 금괴더미(모은 금) + 수레.
-// 흐름 2갈래 모두 "금색 점 흐름"(곡선): (가)광맥→금더미 자동상시, (나)수레→금더미 claimable.
+// 광맥(중앙·최대) + 오로라 + 일꾼 2명(중앙 광맥 채굴) + 금괴더미(모은 금) + 정적 수레.
+// 흐름: 광맥→금더미 자동상시 (배당 수확 버튼 제거 — 자동 적립으로 대체).
 import { scene } from '../assets'
-import { money } from '../utils/format'
 import Miner from './Miner'
 
 // 금괴더미 3단계 — 평가금액(원) 기준. KR: 1천만↓소/1천만~1억중/1억↑대
@@ -47,9 +46,8 @@ function AuroraSparkles({ place, strong = false }) {
 // 좌표는 씬 px(≈390×844) 기준 → %로 변환해 배치. 끝점이 금괴더미(≈117,521).
 const SCENE_W = 390
 const SCENE_H = 844
-// 클러스터를 +11%(≈93px/844) 내림에 맞춰 끝점 이동. 수확 수레는 제자리(시작점 유지).
+// 클러스터를 +11%(≈93px/844) 내림에 맞춰 끝점 이동.
 const PATH_AUTO = [[195, 533], [140, 573], [117, 614]] // 광맥 → 금괴더미
-const PATH_HARVEST = [[203, 690], [160, 655], [119, 616]] // 수레 → 금괴더미 (수레 중심에서 시작)
 const ARROW_ROT = 90 // 위 방향(▲) 삼각형을 진행방향으로 돌리는 보정각
 
 function arrowsAlong([p0, p1, p2], n) {
@@ -89,62 +87,33 @@ function ArrowFlow({ className, path, n }) {
 
 export default function MineScene({
   goldAmount = 0,
-  market = 'KR',
   dimmed = false,
-  claimable = false,
-  harvesting = false,
-  goldPop = false,
-  pendingAmount = 0,
-  onClaim,
 }) {
   return (
     <div className={`mine-scene ${dimmed ? 'dimmed' : ''}`}>
       {/* L0 배경 */}
       <img className="layer l0-bg" src={scene.bgMine} alt="" />
 
-      {/* 광맥 오로라(뒤) → [2] 광맥 뒤 일꾼(z-index 뒤) → 레일 → 광맥 → 오로라(앞) */}
+      {/* 광맥 오로라(뒤) → 광맥 뒤 일꾼 → 뒤쪽 카트 2개 → 광맥 → 오로라(앞) */}
       <AuroraGlow place="vein" strong />
       <Miner variant="backleft" delayMs={620} />
-      {/* 작업3: 뒤쪽 카트 2개 — 광맥 결정보다 먼저 그려 결정 뒤로 감 (작게·어둡게) */}
       <img className="layer cart-static cart-back-left"  src={scene.cart} alt="" aria-hidden="true" />
       <img className="layer cart-static cart-back-right" src={scene.cart} alt="" aria-hidden="true" />
 
       <img className="layer l1-vein" src={scene.veinGold} alt="" />
       <AuroraSparkles place="vein" strong />
 
-      {/* [1][2] 일꾼 — 광맥 좌/우(반전)에 바짝 붙여 캐기. 곡괭이 끝이 광맥 향함 */}
+      {/* 일꾼 — 광맥 좌/우에 바짝 붙여 채굴 중 */}
       <Miner variant="left" delayMs={0} />
       <Miner variant="right" delayMs={380} />
 
-      {/* [3-가] 자동 화살표 흐름: 광맥 → 금괴더미 (상시) */}
+      {/* 자동 화살표 흐름: 광맥 → 금괴더미 (상시) */}
       <ArrowFlow className="flow-auto" path={PATH_AUTO} n={6} />
 
-      {/* 금괴더미 오로라(약) + 금더미(수확 도착 시 pop) + 약한 반짝임 */}
+      {/* 금괴더미 */}
       <AuroraGlow place="gold" />
-      <img className={`layer l1-gold ${goldPop ? 'pop' : ''}`} src={goldPileSrc(goldAmount)} alt="" />
+      <img className="layer l1-gold" src={goldPileSrc(goldAmount)} alt="" />
       <AuroraSparkles place="gold" />
-
-      {/* [3-나] 수확 화살표 흐름: 수레 → 금괴더미 (claimable, 같은 삼각형 스타일) */}
-      {claimable && <ArrowFlow className="flow-harvest" path={PATH_HARVEST} n={5} />}
-
-      {/* [4]+수확 트윈: 평상시엔 수레+버튼, 수확 중엔 나는 수레(곡선)+빈 수레 페이드인 */}
-      {harvesting ? (
-        <>
-          {/* cart_full: 현재 수레 위치 → 금괴더미 (%-기반 곡선, 화면폭 무관) */}
-          <img className="layer cart-fly" src={scene.cartFull} alt="" />
-          {/* 빈 수레: 원래 수레 위치에 페이드인 */}
-          <img className="layer cart-empty-in" src={scene.cartEmpty} alt="" />
-        </>
-      ) : (
-        <div className={`layer l3-cart-wrap ${claimable ? 'claimable' : ''}`}>
-          <img className="cart-fig" src={claimable ? scene.cartFull : scene.cartEmpty} alt="" />
-          {claimable && (
-            <button className="harvest-btn" onClick={onClaim}>
-              배당 수확 +{money(market, pendingAmount)}
-            </button>
-          )}
-        </div>
-      )}
     </div>
   )
 }

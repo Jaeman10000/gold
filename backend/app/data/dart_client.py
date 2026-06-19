@@ -388,3 +388,100 @@ def _growth_to_score(cur: int, prev: int) -> float:
         return 50.0
     rate = (cur - prev) / abs(prev)
     return 50.0 + 40.0 * math.tanh(rate / 0.5)
+
+
+# ── 배당금 추정 ──────────────────────────────────────────────────────────────
+
+def _find_account_by_id(items: list[dict], account_id: str) -> int | None:
+    """XBRL account_id로 최초 비零 값 반환."""
+    for item in items:
+        if item.get("account_id") == account_id:
+            val_str = str(item.get("thstrm_amount", "")).replace(",", "").strip()
+            try:
+                v = int(val_str)
+                if v != 0:
+                    return v
+            except ValueError:
+                pass
+    return None
+
+
+def _calc_dps_from_totals(items: list[dict]) -> int | None:
+    """총배당금 / (순이익 / EPS) = 추정 DPS.
+
+    IFRS XBRL 재무제표에서 주당배당금 직접 항목이 없을 경우 사용.
+    한계: 우선주 배당 분리 없음 · 가중평균 주식수 추정치 사용.
+    """
+    total_div = _find_account_by_id(items, "ifrs-full_DividendsPaidClassifiedAsFinancingActivities")
+    net_income = _find_account_by_id(items, "ifrs-full_ProfitLoss")
+    eps = _find_account_by_id(items, "ifrs-full_BasicEarningsLossPerShare")
+
+    if not total_div or not net_income or not eps or eps == 0:
+        return None
+    if total_div <= 0 or net_income <= 0:
+        return None
+
+    shares = net_income / eps
+    if shares <= 0:
+        return None
+    dps = round(total_div / shares)
+    return dps if dps > 0 else None
+
+
+def get_dividend_per_share(ticker: str, year: int) -> int | None:
+    """DART 재무제표에서 주당배당금(DPS) 조회. 없으면 None.
+
+    1차: fnlttSinglAcntAll '주당배당금' 계정 직접 탐색.
+    2차: 총배당금 / 추정주식수(순이익÷EPS) 계산 폴백.
+    DART_API_KEY 없거나 corp_code 없으면 None 반환.
+    """
+    if not settings.dart_api_key:
+        return None
+    _load_ticker_map()
+    corp_code = _ticker_map.get(ticker)
+    if not corp_code:
+        return None
+
+    dps_names = [
+        "주당배당금",
+        "보통주 주당배당금",
+        "보통주주당배당금",
+        "주당현금배당금",
+        "1주당배당금",
+        "배당금(주당)",
+    ]
+
+    for fs_div in ("OFS", "CFS"):
+        try:
+            resp = httpx.get(
+                f"{_DART_BASE}/fnlttSinglAcntAll.json",
+                params={
+                    "crtfc_key": settings.dart_api_key,
+                    "corp_code": corp_code,
+                    "bsns_year": str(year),
+                    "reprt_code": "11011",  # 사업보고서
+                    "fs_div": fs_div,
+                },
+                timeout=10,
+            )
+            data = resp.json()
+            if data.get("status") != "000":
+                continue
+            items = data.get("list", [])
+
+            # 1차: 직접 탐색
+            dps = _find_account(items, dps_names)
+            if dps is not None and dps > 0:
+                logger.info("DPS 직접 탐색 성공: %s %d년 %s = %d원", ticker, year, fs_div, dps)
+                return dps
+
+            # 2차: 총배당금÷추정주식수 폴백
+            dps = _calc_dps_from_totals(items)
+            if dps is not None:
+                logger.info("DPS 계산 추정: %s %d년 %s = %d원 (총배당÷주식수)", ticker, year, fs_div, dps)
+                return dps
+
+        except Exception as e:
+            logger.debug("DPS 조회 실패 %s %d %s: %s", ticker, year, fs_div, e)
+            continue
+    return None

@@ -30,6 +30,17 @@ export function goldDisplay(market, amount) {
   return formatAmount(market, amount)
 }
 
+// 마지막 갱신 시각 → 상대 표기
+export function timeAgo(isoStr) {
+  if (!isoStr) return null
+  const diff = Math.floor((Date.now() - new Date(isoStr).getTime()) / 1000)
+  if (diff < 10)  return '방금 전'
+  if (diff < 60)  return `${diff}초 전`
+  if (diff < 3600) return `${Math.floor(diff / 60)}분 전`
+  if (diff < 86400) return `${Math.floor(diff / 3600)}시간 전`
+  return `${Math.floor(diff / 86400)}일 전`
+}
+
 // 이익=초록, 손실=빨강 (CLAUDE.md §5)
 export function profitColor(value) {
   if (value > 0) return 'var(--profit)'

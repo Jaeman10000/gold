@@ -1,5 +1,5 @@
 // 광산(홈) — 풀블리드 금광 씬 + 그 위 오버레이(HUD/수익률/칩/디스클레이머). CLAUDE.md §7.
-import { useRef, useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useScreenData, useDataStore } from '../store/dataStore'
 import { useMarket } from '../store/marketStore'
 import MineScene from '../components/MineScene'
@@ -11,89 +11,33 @@ import LockedOverlay from '../components/LockedOverlay'
 import LoadingMascot from '../components/LoadingMascot'
 import RestoreReveal from '../components/RestoreReveal'
 import ErrorState from '../components/ErrorState'
-import { goldDisplay } from '../utils/format'
-
-const FLY_MS = 1200
-const POP_MS = 550
+import PullToRefresh from '../components/PullToRefresh'
+import { goldDisplay, timeAgo } from '../utils/format'
 
 export default function MineHome() {
   const { market } = useMarket()
-  const { data, loading, refreshing, error } = useScreenData('portfolio', market)
-  const { refresh } = useDataStore()
+  const { data, loading, refreshing, error, cachedAt } = useScreenData('portfolio', market)
+  const { refresh, levelData } = useDataStore()   // 전역 — 탭 전환 후에도 유지
   const [sheetOpen, setSheetOpen] = useState(false)
-  const [pendingOverride, setPendingOverride] = useState(null)
-  const [harvesting, setHarvesting] = useState(false)
-  const [goldPop, setGoldPop] = useState(false)
-  const [bonus, setBonus] = useState(0)
-  const rafRef = useRef(0)
-  const [levelData, setLevelData] = useState(null)
-
-  useEffect(() => {
-    fetch('/api/level?sync=true').then(r => r.json()).then(setLevelData).catch(() => {})
-  }, [])
 
   const locked = data?.status === 'locked'
-  const effectivePending = pendingOverride !== null ? pendingOverride : data?.pendingDividend || 0
-  const claimable = effectivePending > 0 && !harvesting
-
-  const displayGold = (data?.goldAmount || 0) + bonus
-  const goldStr = data ? goldDisplay(data.market, displayGold) : ''
-
-  function countUp(amount) {
-    const start = performance.now()
-    const tick = (now) => {
-      const t = Math.min(1, (now - start) / POP_MS)
-      const eased = 1 - Math.pow(1 - t, 3)
-      setBonus(Math.round(amount * eased))
-      if (t < 1) rafRef.current = requestAnimationFrame(tick)
-    }
-    rafRef.current = requestAnimationFrame(tick)
-  }
-
-  function handleClaim() {
-    if (harvesting || !claimable) return
-    const amount = effectivePending
-    setHarvesting(true)
-    setTimeout(() => {
-      setGoldPop(true)
-      countUp(amount)
-    }, FLY_MS)
-    setTimeout(() => {
-      setPendingOverride(0)
-      setHarvesting(false)
-      setGoldPop(false)
-    }, FLY_MS + POP_MS + 150)
-  }
+  const goldStr = data ? goldDisplay(data.market, data.goldAmount || 0) : ''
 
   return (
+    <PullToRefresh onRefresh={() => refresh(market)} refreshing={refreshing}>
     <div className="screen mine-home">
       {/* z0: 풀블리드 씬 */}
       <MineScene
         goldAmount={locked ? 0 : data?.goldAmount || 0}
         market={data?.market || 'KR'}
         dimmed={locked}
-        claimable={!locked && claimable}
-        harvesting={harvesting}
-        goldPop={goldPop}
-        pendingAmount={effectivePending}
-        onClaim={handleClaim}
       />
 
-      {/* [A] 시장 전환 시 화면 내 로딩 오버레이 (독 제외) */}
       {loading && !data && (
         <LoadingMascot text="시장 데이터를 불러오는 중…" />
       )}
 
       {error && !data && <ErrorState message={`백엔드 연결 실패: ${error}`} onRetry={() => refresh(market)} />}
-
-      {import.meta.env.DEV && !locked && !harvesting && data && (
-        <button
-          className="dev-toggle"
-          onClick={() => { setBonus(0); setPendingOverride(claimable ? 0 : data?.pendingDividend || 40910) }}
-        >
-          배당 {claimable ? '→0 (idle)' : '→+ (claimable)'}
-        </button>
-      )}
 
       {locked && <LockedOverlay reason={data.reason} />}
 
@@ -115,6 +59,9 @@ export default function MineHome() {
               />
             </div>
           </div>
+          {cachedAt && (
+            <div className="last-updated">↻ {timeAgo(cachedAt)} 업데이트</div>
+          )}
           <div className="home-disclaimer">{data.disclaimer}</div>
           <HoldingsSheet
             open={sheetOpen}
@@ -125,5 +72,6 @@ export default function MineHome() {
         </>
       )}
     </div>
+    </PullToRefresh>
   )
 }

@@ -9,7 +9,7 @@
 from app.data.provider import get_provider
 from app.db import SessionLocal
 from app.models import Dividend
-from app.services import common, scoring_service
+from app.services import cache_service, common, scoring_service
 
 
 def _pending_dividend(market: str) -> float:
@@ -39,10 +39,16 @@ def _compute_holdings(raw: list[dict]) -> list[dict]:
     return out
 
 
-def build_portfolio(market: str, pending_override: int | None = None) -> dict:
+def build_portfolio(market: str, pending_override: int | None = None, force: bool = False) -> dict:
     provider = get_provider()
     if not provider.is_market_available(market):
         return common.locked_response(market)
+
+    if not force and pending_override is None:
+        hit = cache_service.get(f"portfolio_{market}")
+        if hit:
+            data, cached_at = hit
+            return {**data, "cachedAt": cached_at}
 
     cur = common.currency_of(market)
     holdings = _compute_holdings(provider.get_holdings(market))
@@ -76,7 +82,7 @@ def build_portfolio(market: str, pending_override: int | None = None) -> dict:
     else:
         vein_label = f"{'US 광맥' if market == 'US' else '광맥'} {scoring_service.grade_of(score)}"
 
-    return {
+    result = {
         "status": "ok",
         "market": market,
         "currency": cur["currency"],
@@ -98,3 +104,7 @@ def build_portfolio(market: str, pending_override: int | None = None) -> dict:
         "topHoldings": holdings[:3],     # 홈 미리보기
         "disclaimer": common.DISCLAIMER,
     }
+    if pending_override is None:
+        cached_at = cache_service.put(f"portfolio_{market}", result)
+        result["cachedAt"] = cached_at
+    return result
