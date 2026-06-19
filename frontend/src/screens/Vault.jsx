@@ -5,6 +5,7 @@ import { useMarket } from '../store/marketStore'
 import MarketToggle from '../components/MarketToggle'
 import LockedOverlay from '../components/LockedOverlay'
 import LoadingMascot from '../components/LoadingMascot'
+import ErrorState from '../components/ErrorState'
 import { money, profitColor } from '../utils/format'
 
 // 백엔드 exp_config와 동일한 공식 (sell_w=10, cap=30, min=1)
@@ -157,7 +158,7 @@ export default function Vault() {
       </header>
 
       {loading && !data && <LoadingMascot text="금고를 열고 있는 중…" />}
-      {error && !data && <div className="center-msg err">백엔드 연결 실패: {error}</div>}
+      {error && !data && <ErrorState message={`백엔드 연결 실패: ${error}`} onRetry={() => refresh(market)} />}
       {locked && <LockedOverlay reason={data.reason} />}
 
       {!loading && !locked && data && (

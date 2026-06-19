@@ -1,6 +1,6 @@
 // 광산(홈) — 풀블리드 금광 씬 + 그 위 오버레이(HUD/수익률/칩/디스클레이머). CLAUDE.md §7.
 import { useRef, useState, useEffect } from 'react'
-import { useScreenData } from '../store/dataStore'
+import { useScreenData, useDataStore } from '../store/dataStore'
 import { useMarket } from '../store/marketStore'
 import MineScene from '../components/MineScene'
 import Hud from '../components/Hud'
@@ -10,6 +10,7 @@ import HoldingsSheet from '../components/HoldingsSheet'
 import LockedOverlay from '../components/LockedOverlay'
 import LoadingMascot from '../components/LoadingMascot'
 import RestoreReveal from '../components/RestoreReveal'
+import ErrorState from '../components/ErrorState'
 import { goldDisplay } from '../utils/format'
 
 const FLY_MS = 1200
@@ -18,6 +19,7 @@ const POP_MS = 550
 export default function MineHome() {
   const { market } = useMarket()
   const { data, loading, refreshing, error } = useScreenData('portfolio', market)
+  const { refresh } = useDataStore()
   const [sheetOpen, setSheetOpen] = useState(false)
   const [pendingOverride, setPendingOverride] = useState(null)
   const [harvesting, setHarvesting] = useState(false)
@@ -82,7 +84,7 @@ export default function MineHome() {
         <LoadingMascot text="시장 데이터를 불러오는 중…" />
       )}
 
-      {error && !data && <div className="center-msg err">백엔드 연결 실패: {error}</div>}
+      {error && !data && <ErrorState message={`백엔드 연결 실패: ${error}`} onRetry={() => refresh(market)} />}
 
       {import.meta.env.DEV && !locked && !harvesting && data && (
         <button

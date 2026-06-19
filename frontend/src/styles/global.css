@@ -948,6 +948,38 @@ body {
 .dock-icon { font-size: 20px; }
 .dock-label { font-size: 11px; font-weight: 600; }
 .dock-soon { position: absolute; top: 2px; right: 18px; font-size: 8px; background: var(--gold-deep); color: #1a1206; padding: 1px 4px; border-radius: 4px; }
+/* 연구소처럼 "곧 나올" 탭 — 아이콘/라벨 흐리게, 클릭은 됨(준비 중 화면 이동) */
+.dock-item.soon { opacity: .45; }
+.dock-item.soon.active { opacity: 1; }
+
+/* ── 공통 에러 상태 ────────────────────────────────────────────── */
+.error-state {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 10px; padding: 40px 24px; text-align: center;
+}
+.error-state-icon { font-size: 36px; opacity: .7; }
+.error-state-msg { font-size: 14px; color: var(--text-dim); line-height: 1.5; }
+.error-retry-btn {
+  margin-top: 4px; padding: 8px 22px; border-radius: 20px;
+  border: 1px solid rgba(232,179,57,.4); background: transparent;
+  color: var(--gold); font-size: 13px; font-weight: 700; cursor: pointer;
+  transition: all .15s;
+}
+.error-retry-btn:hover { background: rgba(232,179,57,.12); border-color: var(--gold); }
+
+/* ── 연구소 준비 중 화면 ───────────────────────────────────────── */
+.lab-coming {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 12px; height: 60vh; text-align: center; padding: 0 32px;
+}
+.lab-coming-icon { font-size: 56px; opacity: .5; }
+.lab-coming-title { font-size: 22px; font-weight: 900; color: var(--text-dim); }
+.lab-coming-desc { font-size: 14px; color: var(--text-dim); opacity: .7; line-height: 1.6; }
+.lab-coming-badge {
+  margin-top: 4px; padding: 4px 14px; border-radius: 20px;
+  border: 1px solid rgba(232,179,57,.3); color: var(--gold);
+  font-size: 12px; font-weight: 700; letter-spacing: 1px;
+}
 
 /* ========== 탐사(what-if) 화면 ========== */
 .explore-screen { display: flex; flex-direction: column; height: 100%; }

@@ -7,6 +7,7 @@ import { api } from '../api/client'
 import MarketToggle from '../components/MarketToggle'
 import LockedOverlay from '../components/LockedOverlay'
 import LoadingMascot from '../components/LoadingMascot'
+import ErrorState from '../components/ErrorState'
 
 // 등급별 색상 (S~F)
 function gradeColor(grade) {
@@ -380,7 +381,7 @@ export default function Survey() {
 
       {loading && !data && <LoadingMascot text="측량 중…" />}
       {(saving || (refreshing && data)) && <LoadingMascot variant="screenblur" text="광맥을 측량하는 중…" />}
-      {error && !data && <div className="center-msg err">백엔드 연결 실패: {error}</div>}
+      {error && !data && <ErrorState message={`백엔드 연결 실패: ${error}`} onRetry={() => refresh(market)} />}
       {locked && <LockedOverlay reason={data.reason} />}
 
       {!loading && !locked && data && (

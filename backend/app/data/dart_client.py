@@ -73,15 +73,26 @@ def search_stocks(query: str, limit: int = 12) -> list[dict]:
         name = _name_map.get(q) or ""
         return [{"ticker": q, "name": name}] if (name or True) else []
 
-    # 이름 부분 일치 (대소문자 무관)
+    # 이름 부분 일치 (대소문자 무관) — 전체 수집 후 중립 정렬, 그다음 limit.
+    # (정렬 전 truncate 하면 dict 순서상 뒤의 정확/접두 일치가 통째로 누락됨)
     q_lower = q.lower()
-    results: list[dict] = []
+    matches: list[tuple] = []
     for ticker, name in _name_map.items():
-        if q_lower in name.lower():
-            results.append({"ticker": ticker, "name": name})
-        if len(results) >= limit:
-            break
-    return results
+        nl = name.lower()
+        if q_lower not in nl:
+            continue
+        if nl == q_lower:
+            tier = 0          # 정확히 일치
+        elif nl.startswith(q_lower):
+            tier = 1          # 접두 일치
+        else:
+            tier = 2          # 부분 포함
+        matches.append((tier, len(name), name, ticker))
+
+    # 중립 정렬: 일치도(정확>접두>포함) → 이름 길이(짧을수록 구체) → 가나다.
+    # 시총·거래량 등 인기/추천 기준 사용 금지 (CLAUDE.md §4 하드룰).
+    matches.sort(key=lambda m: (m[0], m[1], m[2]))
+    return [{"ticker": t, "name": n} for _, _, n, t in matches[:limit]]
 
 
 def _load_ticker_map() -> None:

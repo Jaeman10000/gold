@@ -6,9 +6,10 @@ import MineHome from './screens/MineHome'
 import Vault from './screens/Vault'
 import Survey from './screens/Survey'
 import Explore from './screens/Explore'
+import Lab from './screens/Lab'
 import LoadingMascot from './components/LoadingMascot'
 
-const SCREENS = { mine: MineHome, vault: Vault, survey: Survey, explore: Explore }
+const SCREENS = { mine: MineHome, vault: Vault, survey: Survey, explore: Explore, lab: Lab }
 
 function AppInner() {
   const [active, setActive] = useState('mine')

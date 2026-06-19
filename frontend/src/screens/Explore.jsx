@@ -3,6 +3,7 @@
 import { useRef, useState, useMemo } from 'react'
 import { useMarket } from '../store/marketStore'
 import { useScreenData } from '../store/dataStore'
+import ErrorState from '../components/ErrorState'
 
 // 한국어 조사 선택: 받침 있으면 "이", 없으면 "가"
 function particle(name) {
@@ -351,7 +352,7 @@ export default function Explore() {
         )}
 
         {simState === 'error' && (
-          <div className="explore-error">{simError}</div>
+          <ErrorState message={simError} onRetry={handleSimulate} />
         )}
 
       </div>
