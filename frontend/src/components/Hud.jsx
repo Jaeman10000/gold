@@ -3,8 +3,9 @@
 // 2단: 등급칩 · 시장토글 · 성향칩
 // 3단: 총 평가금액
 import MarketToggle from './MarketToggle'
+import { syncTime } from '../utils/format'
 
-export default function Hud({ data, goldOverride, refreshing, levelData, achievement }) {
+export default function Hud({ data, goldOverride, refreshing, levelData, achievement, onSync, cachedAt }) {
   const { veinGrade, disposition } = data
   const goldText = goldOverride || data.goldAmountDisplay
 
@@ -42,7 +43,16 @@ export default function Hud({ data, goldOverride, refreshing, levelData, achieve
           </div>
         </div>
         <div className="h-icons">
-          {refreshing && <div className="refresh-spin" style={{ margin: 0 }} />}
+          <button
+            className="sync-btn"
+            onClick={onSync}
+            disabled={refreshing}
+            aria-label="동기화"
+            title="데이터 새로고침"
+          >
+            <span className={refreshing ? 'sync-icon spinning' : 'sync-icon'}>🔄</span>
+            <span className="sync-time">{refreshing ? '동기화 중…' : (syncTime(cachedAt) || '')}</span>
+          </button>
           <span className="h-icon" aria-label="알림">🔔</span>
           <span className="h-icon" aria-label="설정">⚙</span>
         </div>

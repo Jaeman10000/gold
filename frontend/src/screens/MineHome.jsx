@@ -12,7 +12,7 @@ import LockedOverlay from '../components/LockedOverlay'
 import LoadingMascot from '../components/LoadingMascot'
 import RestoreReveal from '../components/RestoreReveal'
 import ErrorState from '../components/ErrorState'
-import PullToRefresh from '../components/PullToRefresh'
+import SupplyDetailSheet from '../components/SupplyDetailSheet'
 import { goldDisplay, timeAgo } from '../utils/format'
 
 export default function MineHome() {
@@ -20,6 +20,7 @@ export default function MineHome() {
   const { data, loading, refreshing, error, cachedAt } = useScreenData('portfolio', market)
   const { refresh, levelData } = useDataStore()   // 전역 — 탭 전환 후에도 유지
   const [sheetOpen, setSheetOpen] = useState(false)
+  const [supplySheetOpen, setSupplySheetOpen] = useState(false)
   const [highlights, setHighlights] = useState(null)  // [B] 수급 + [C] 업적 한 줄
 
   useEffect(() => {
@@ -31,7 +32,6 @@ export default function MineHome() {
   const goldStr = data ? goldDisplay(data.market, data.goldAmount || 0) : ''
 
   return (
-    <PullToRefresh onRefresh={() => refresh(market)} refreshing={refreshing}>
     <div className="screen mine-home">
       {/* z0: 풀블리드 씬 */}
       <MineScene
@@ -57,11 +57,13 @@ export default function MineHome() {
         <>
           {/* 헤더 패널 + 수익률 알약 + 종목 칩 (세로 스택) */}
           <div className="home-overlay">
-            <Hud data={data} goldOverride={goldStr} refreshing={refreshing} levelData={levelData} achievement={highlights?.achievement} />
+            <Hud data={data} goldOverride={goldStr} refreshing={refreshing} levelData={levelData} achievement={highlights?.achievement} onSync={() => refresh(market)} cachedAt={cachedAt} />
             <div className="home-pill-chips">
               <ReturnPanel data={data} onExpand={() => setSheetOpen(true)} />
               {highlights?.supply?.text && (
-                <div className="supply-line">📊 {highlights.supply.text}</div>
+                <button className="supply-line" onClick={() => setSupplySheetOpen(true)}>
+                  📊 {highlights.supply.text}
+                </button>
               )}
               <HoldingChips
                 holdings={data.holdings}
@@ -81,7 +83,13 @@ export default function MineHome() {
           />
         </>
       )}
+
+      {supplySheetOpen && highlights?.supply && (
+        <SupplyDetailSheet
+          supply={highlights.supply}
+          onClose={() => setSupplySheetOpen(false)}
+        />
+      )}
     </div>
-    </PullToRefresh>
   )
 }

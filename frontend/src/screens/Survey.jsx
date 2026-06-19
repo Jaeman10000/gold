@@ -8,7 +8,6 @@ import MarketToggle from '../components/MarketToggle'
 import LockedOverlay from '../components/LockedOverlay'
 import LoadingMascot from '../components/LoadingMascot'
 import ErrorState from '../components/ErrorState'
-import PullToRefresh from '../components/PullToRefresh'
 import { timeAgo } from '../utils/format'
 
 // 등급별 색상 (S~F)
@@ -332,7 +331,6 @@ export default function Survey() {
   }
 
   return (
-    <PullToRefresh onRefresh={() => refresh(market)} refreshing={refreshing}>
     <div className="screen survey">
       <header className="screen-header">
         <h2 className="survey-title">
@@ -359,14 +357,6 @@ export default function Survey() {
           <div className="score-hero">
             <div className="score-grade" style={{ color: gradeColor(data.grade) }}>{data.grade}</div>
             <div className="score-num">{data.score}<span>/100</span></div>
-            {mode === 'theme' && data.theme && (
-              <div className="theme-info-row">
-                <span className="theme-tag">정렬도 {data.theme.alignment}%</span>
-                {data.theme.matchedQuality !== null && (
-                  <span className="theme-tag">정렬종목 품질 {data.theme.matchedQuality}</span>
-                )}
-              </div>
-            )}
             {/* 하드룰 고정 문구 */}
             <div className="hard-rule-banner">
               투자권유 아님 · 점수 낮음≠나쁜 포트폴리오 · {mode === 'basic' ? '우열이 아닌 사실 스냅샷' : '사용자가 설정한 렌즈'}
@@ -434,27 +424,12 @@ export default function Survey() {
               <span className="card-title-sub">Σ기여={data.score}</span>
             </div>
             {data.contributions.map(c => (
-              <div
-                className={`contrib-card ${mode === 'theme' && c.matched === false ? 'contrib-unmatched' : ''}`}
-                key={c.ticker}
-              >
+              <div className="contrib-card" key={c.ticker}>
                 <div className="cc-header">
-                  {mode === 'theme' && (
-                    <span className={`match-badge ${c.matched ? 'matched' : 'unmatched'}`}>
-                      {c.matched ? `✓ ${c.matchSource}` : '✗ 미정렬'}
-                    </span>
-                  )}
                   <span className="cc-name">{c.name}</span>
                   <span className="cc-weight">{c.weight}%</span>
                   <span className="cc-contrib">기여 <b style={{ color: 'var(--gold-bright)' }}>{c.contribution.toFixed(1)}</b></span>
                 </div>
-
-                {/* 테마 태그 (theme 모드) */}
-                {c.themes?.length > 0 && (
-                  <div className="cc-themes">
-                    {c.themes.map(t => <span className="theme-tag" key={t}>{t}</span>)}
-                  </div>
-                )}
 
                 {/* fund 점수 */}
                 <div className="cc-fund-row">
@@ -577,6 +552,5 @@ export default function Survey() {
         />
       )}
     </div>
-    </PullToRefresh>
   )
 }

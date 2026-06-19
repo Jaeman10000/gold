@@ -5,8 +5,6 @@ import { api } from '../api/client'
 import MarketToggle from '../components/MarketToggle'
 import LoadingMascot from '../components/LoadingMascot'
 import ErrorState from '../components/ErrorState'
-import PullToRefresh from '../components/PullToRefresh'
-
 export default function News() {
   const { market } = useMarket()
   const [data, setData] = useState(null)
@@ -28,7 +26,6 @@ export default function News() {
   const items = data?.items || []
 
   return (
-    <PullToRefresh onRefresh={() => load(true)} refreshing={refreshing}>
     <div className="screen news-screen">
       <header className="screen-header">
         <h2 className="survey-title">뉴스 <span className="mode-badge basic-badge">보유 종목</span></h2>
@@ -67,6 +64,5 @@ export default function News() {
         </div>
       )}
     </div>
-    </PullToRefresh>
   )
 }

@@ -45,6 +45,7 @@ export const api = {
   exploreSearch:   (q, market) => get(`/explore/search?q=${encodeURIComponent(q)}&market=${market}`),
   exploreSimulate: (body) => post('/explore/simulate', body),
   news:            (market) => get(`/news?market=${market}`),
+  newsForTicker:   (market, ticker) => get(`/news?market=${market}&ticker=${encodeURIComponent(ticker)}`),
   highlights:      (market) => get(`/highlights?market=${market}`),
   upload,
 }

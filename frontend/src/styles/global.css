@@ -343,14 +343,47 @@ body {
 }
 .achievement-line .ach-icon { font-size: 12px; }
 
-/* [B] 오늘의 수급 한 줄 (수익률 알약 아래) */
+/* [B] 오늘의 수급 한 줄 — 클릭 가능 버튼 */
 .supply-line {
   display: inline-flex; align-items: center; gap: 6px;
   font-size: 12px; font-weight: 600; color: rgba(255,255,255,.78);
   background: rgba(12,8,4,.7); border: 1px solid var(--line);
   border-radius: 999px; padding: 6px 14px; backdrop-filter: blur(6px);
-  white-space: nowrap;
+  white-space: nowrap; cursor: pointer; text-align: left;
+  transition: background .15s, border-color .15s;
 }
+.supply-line:active { background: rgba(232,179,57,.15); border-color: rgba(232,179,57,.4); }
+
+/* 동기화 버튼 */
+.sync-btn {
+  display: flex; flex-direction: column; align-items: center; gap: 1px;
+  background: none; border: none; cursor: pointer; padding: 2px 4px;
+  color: rgba(255,255,255,.7); opacity: 1;
+}
+.sync-btn:disabled { opacity: .5; cursor: default; }
+.sync-icon { font-size: 14px; line-height: 1; display: block; }
+.sync-icon.spinning { display: inline-block; animation: spin 1s linear infinite; }
+.sync-time { font-size: 9px; color: rgba(255,255,255,.45); white-space: nowrap; }
+
+/* 수급 Bottom Sheet */
+.supply-detail-sheet { padding-bottom: calc(env(safe-area-inset-bottom, 16px) + 20px); }
+.sds-title { font-size: 1.25rem; font-weight: 800; color: var(--gold-bright); margin: 4px 0 2px; }
+.sds-subtitle { font-size: 0.78rem; color: var(--text-dim); margin-bottom: 16px; }
+.sds-row { display: flex; gap: 12px; margin-bottom: 8px; }
+.sds-item { flex: 1; background: rgba(255,255,255,.04); border: 1px solid var(--line); border-radius: 12px; padding: 14px 12px; display: flex; flex-direction: column; gap: 6px; }
+.sds-divider { width: 1px; background: var(--line); flex-shrink: 0; }
+.sds-label { font-size: 0.78rem; color: var(--text-dim); }
+.sds-val { font-size: 1.1rem; font-weight: 800; }
+.sds-val.up { color: var(--profit); }
+.sds-val.dn { color: var(--loss); }
+.sds-note { font-size: 0.72rem; color: var(--text-dim); margin-bottom: 16px; }
+.sds-news-loading { font-size: 0.82rem; color: var(--text-dim); text-align: center; padding: 12px 0; }
+.sds-news { display: flex; flex-direction: column; gap: 8px; }
+.sds-news-header { font-size: 0.82rem; font-weight: 700; color: var(--text-dim); margin-bottom: 2px; }
+.sds-news-item { display: block; text-decoration: none; background: rgba(255,255,255,.04); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+.sds-news-item:active { background: rgba(232,179,57,.07); }
+.sni-title { font-size: 0.85rem; color: var(--text); line-height: 1.4; margin-bottom: 4px; }
+.sni-meta { font-size: 0.72rem; color: var(--text-dim); }
 
 /* ---------- 뉴스 화면 ---------- */
 .news-body { display: flex; flex-direction: column; gap: 10px; padding-bottom: 8px; }
@@ -687,7 +720,7 @@ body {
 .disposition-card {}
 /* 성향 타입 — 크게·눈에 확 띄게 (정보 과부하 제거: 요약 문장 삭제, 3개 특성만) */
 .disp-type-big {
-  font-size: 1.9rem; font-weight: 900; line-height: 1.1;
+  font-size: 2.4rem; font-weight: 900; line-height: 1.1;
   background: linear-gradient(135deg, var(--gold-bright), var(--gold-deep));
   -webkit-background-clip: text; background-clip: text;
   -webkit-text-fill-color: transparent; color: var(--gold-bright);

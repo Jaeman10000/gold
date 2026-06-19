@@ -97,10 +97,13 @@ def _supply_block(market: str) -> dict | None:
     direction = "순매수" if total > 0 else "순매도"
     arrow = "↑" if total > 0 else "↓"
     return {
+        "ticker": tk,
         "name": names.get(tk, tk),
         "who": who,
         "direction": direction,
         "arrow": arrow,
+        "foreign": v.get("foreign", 0),
+        "inst": v.get("inst", 0),
         "text": f"오늘 {names.get(tk, tk)} {who} {direction} {arrow}",
     }
 

@@ -7,7 +7,6 @@ import MarketToggle from '../components/MarketToggle'
 import LockedOverlay from '../components/LockedOverlay'
 import LoadingMascot from '../components/LoadingMascot'
 import ErrorState from '../components/ErrorState'
-import PullToRefresh from '../components/PullToRefresh'
 import { money, profitColor, timeAgo } from '../utils/format'
 
 // 백엔드 exp_config와 동일한 공식 (sell_w=10, cap=30, min=1)
@@ -142,7 +141,6 @@ export default function Vault() {
   }
 
   return (
-    <PullToRefresh onRefresh={() => refresh(market)} refreshing={refreshing}>
     <div className="screen vault">
       <header className="screen-header">
         <h2>금고 · 장부</h2>
@@ -286,6 +284,5 @@ export default function Vault() {
         </div>
       )}
     </div>
-    </PullToRefresh>
   )
 }

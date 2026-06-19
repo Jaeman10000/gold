@@ -41,6 +41,16 @@ export function timeAgo(isoStr) {
   return `${Math.floor(diff / 86400)}일 전`
 }
 
+// 동기화 시각 → "HH:MM" (한국 로컬)
+export function syncTime(isoStr) {
+  if (!isoStr) return ''
+  try {
+    return new Date(isoStr).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false })
+  } catch {
+    return ''
+  }
+}
+
 // 이익=초록, 손실=빨강 (CLAUDE.md §5)
 export function profitColor(value) {
   if (value > 0) return 'var(--profit)'

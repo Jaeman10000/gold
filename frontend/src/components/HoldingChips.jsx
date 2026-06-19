@@ -1,6 +1,6 @@
 // 보유 종목 카드 (CLAUDE.md §5). 홈 화면용.
 // 한 번에 2개씩 페이지로 표시. › 탭으로 다음 페이지(마지막→첫 페이지 순환).
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { pct, profitColor } from '../utils/format'
 import { scene } from '../assets'
 
@@ -22,8 +22,19 @@ function gemFor(returnRate) {
 
 const PAGE_SIZE = 2
 
+// 광물 이미지 프리로드 — 페이지 전환 시 깜빡임 방지
+function useGemPreload() {
+  useEffect(() => {
+    GEM_TIERS.forEach(({ key }) => {
+      const img = new window.Image()
+      img.src = scene[key]
+    })
+  }, [])
+}
+
 export default function HoldingChips({ holdings, onExpand }) {
   const [page, setPage] = useState(0)
+  useGemPreload()
 
   const pageCount = Math.max(1, Math.ceil(holdings.length / PAGE_SIZE))
   const safePage  = page % pageCount

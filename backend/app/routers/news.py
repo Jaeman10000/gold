@@ -24,8 +24,8 @@ def _fresh(cached_at: str) -> bool:
 
 
 @router.get("")
-def get_news(market: str = "KR") -> dict:
-    """보유 종목별 네이버 뉴스 병합 → 최신 6개. 30분 캐시."""
+def get_news(market: str = "KR", ticker: str | None = None) -> dict:
+    """보유 종목별 네이버 뉴스. ticker 지정 시 해당 종목만 5개."""
     if market != "KR":
         return {
             "market": market,
@@ -35,13 +35,19 @@ def get_news(market: str = "KR") -> dict:
             "disclaimer": _DISCLAIMER,
         }
 
+    provider = get_provider()
+    holdings = provider.get_holdings(market) or []
+
+    # 특정 종목 뉴스 (Bottom Sheet 상세 조회 — 캐시 없이 최신)
+    if ticker:
+        h = next((h for h in holdings if h["ticker"] == ticker), None)
+        items = naver_news.get_stock_news(ticker, h["name"] if h else ticker, limit=5) if h else []
+        return {"items": items, "market": market, "disclaimer": _DISCLAIMER}
+
     key = f"news:{market}"
     cached = cache_service.get(key)
     if cached and _fresh(cached[1]):
         return {**cached[0], "market": market, "cachedAt": cached[1]}
-
-    provider = get_provider()
-    holdings = provider.get_holdings(market) or []
 
     collected: list[dict] = []
     for h in holdings[:8]:  # 과도한 외부 호출 방지
