@@ -11,8 +11,10 @@ export default defineConfig({
   },
   server: {
     port: 5173,
+    // Cloudflare Quick Tunnel(trycloudflare.com) Host 헤더 허용 — 폰에서 터널로 접속 시 필요
+    allowedHosts: ['.trycloudflare.com'],
     proxy: {
-      '/api': 'http://localhost:8002', // ← 백엔드 포트 8002
+      '/api': 'http://localhost:8002', // ← 백엔드 포트 8002 (VITE_API_URL 설정 시 미사용)
     },
   },
   // Railway preview 서버가 프록시 도메인 Host 헤더를 차단하지 않도록 허용

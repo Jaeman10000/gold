@@ -16,25 +16,18 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(title="광맥 (Gwangmaek) API", version="0.1.0")
 
-# CORS 는 패스코드 미들웨어보다 먼저 등록 (preflight OPTIONS 응답을 위해)
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.cors_origin_list,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*", "X-Passcode"],
-)
-
 _PASSCODE_EXEMPT = {"/api/health"}  # Railway 헬스체크는 패스코드 없이 통과
 
 
+# 패스코드 게이트를 먼저 등록 → CORS 를 나중에 등록해 '가장 바깥'에 둔다.
+# Starlette 는 나중에 add 한 미들웨어가 outermost. CORS 가 outermost 여야
+# 패스코드 401 같은 단축 응답에도 Access-Control-Allow-Origin 이 붙어
+# 브라우저가 응답을 읽을 수 있다(안 그러면 401 이 CORS 에러로 막혀 프론트가 오판).
 @app.middleware("http")
 async def passcode_gate(request: Request, call_next):
     """APP_PASSCODE 설정 시 모든 API에 X-Passcode 헤더 검증. 빈 값이면 개발 모드(무제한)."""
-    # CORS preflight(OPTIONS)는 X-Passcode 헤더를 싣지 않으므로 통과시켜 안쪽 CORS 미들웨어가 응답하게 한다.
-    # (이 미들웨어가 CORSMiddleware 보다 바깥에 있어 막으면 브라우저 요청이 전부 차단됨)
     if (
-        request.method == "OPTIONS"
+        request.method == "OPTIONS"  # preflight 는 바깥 CORS 가 처리 (방어적)
         or not settings.app_passcode
         or request.url.path in _PASSCODE_EXEMPT
     ):
@@ -42,6 +35,16 @@ async def passcode_gate(request: Request, call_next):
     if request.headers.get("X-Passcode", "") != settings.app_passcode:
         return JSONResponse({"detail": "패스코드가 맞지 않아요"}, status_code=401)
     return await call_next(request)
+
+
+# CORS 를 마지막에 등록 = outermost (위 주석 참고)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_origin_list,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*", "X-Passcode"],
+)
 
 app.include_router(portfolio.router)
 app.include_router(vault.router)
