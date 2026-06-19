@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     # 데이터 소스: "mock" | "kiwoom"
     data_provider: str = "mock"
 
-    # CORS (콤마 구분)
+    # CORS (콤마 구분). trycloudflare.com은 regex로 별도 허용.
     cors_origins: str = "http://localhost:5173"
 
     # 패스코드 접근 제한 (v1.5 싱글유저). 비어있으면 제한 없음(로컬 개발용).

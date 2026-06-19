@@ -50,9 +50,11 @@ async def passcode_gate(request: Request, call_next):
 
 
 # CORS 를 마지막에 등록 = outermost (위 주석 참고)
+# allow_origin_regex: Cloudflare Quick Tunnel(*.trycloudflare.com) URL이 재시작마다 바뀌어도 자동 허용.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origin_list,
+    allow_origin_regex=r"https://.*\.trycloudflare\.com",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*", "X-Passcode"],
