@@ -264,9 +264,10 @@
 - ✅ **Railway 배포 (2026-06-19, v1.5 1단계)** — backend·frontend 두 서비스 Online.
   - backend: root=`backend`, `/data` 영구 볼륨(SQLite). frontend: root=`frontend`, nixpacks `vite preview`.
   - 함정 해결: ① 서비스 Root Directory를 backend/frontend로 설정해야 격리형 빌드 성공(루트 빌드 시 Railpack 실패). ② `assets/`를 `frontend/`로 이동(격리 빌드가 ../assets 못 봄). ③ 패스코드 게이트가 CORS preflight(OPTIONS) 차단하던 버그 수정.
-  - ⚠️ **키움/DART 키 값이 짧아(8/10자) 인증 실패 → MockProvider 폴백.** 전체 키 재입력 필요.
-  - 상세: 메모리 `railway-deploy-setup`.
-- ⬜ 다음: 키움 키 정상화 → 광부 명함 → v2
+  - ⚠️ **키움 REST는 한국 IP만 허용(8050)** → Railway(미국) 불가. **로컬 PC(KR IP) + Cloudflare Quick Tunnel**로 폰 접속 중. 상세: 메모리 `railway-deploy-setup`.
+- ✅ **모바일 UI 정리 (2026-06-19)** — 홈 HUD 압축(씬 더 보이게), 측량소 테마모드 정보 과부하 섹션 제거(정렬도 텍스트·테마시장맥락·테마정렬분석), 성향 카드 간소화(타입 크게+특성 3개).
+- ✅ **재방문 후크 3종 (2026-06-19)** — [A] 보유종목 뉴스(네이버 증권 API, 하단 독 `연구소`→`뉴스` 교체) [B] 오늘의 수급 한 줄(ka10059 재활용, 홈) [C] 연속투자일·업적 한 줄(streak, 홈). `/api/news`·`/api/highlights`. **배당 예정만 미구현**(DART에 미래 배당락일 없음 — 소스 확보 후).
+- ⬜ 다음: 광부 명함 → 배당 일정 소스 확보 → v2
 - ⚠️ **환경 불일치**: `backend/.venv`가 Python **3.14.5** (CLAUDE.md는 3.12 고정). 3.12 재구성 검토.
 - ⚠️ LS ELECTRIC 등 corp_code 미매핑 종목 보완 필요(현재 health_na 폴백).
 
