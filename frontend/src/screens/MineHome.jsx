@@ -64,7 +64,7 @@ export default function MineHome() {
         <>
           {/* 헤더 패널 + 수익률 알약 + 종목 칩 (세로 스택) */}
           <div className="home-overlay">
-            <Hud data={data} goldOverride={goldStr} refreshing={refreshing} levelData={levelData} achievement={highlights?.achievement} onSync={() => refresh(market)} cachedAt={cachedAt} />
+            <Hud data={data} goldOverride={goldStr} refreshing={refreshing} levelData={levelData} achievement={visitStreak?.message || highlights?.achievement} onSync={() => refresh(market)} cachedAt={cachedAt} />
             <div className="home-pill-chips">
               <ReturnPanel data={data} onExpand={() => setSheetOpen(true)} />
               {highlights?.supply?.text && (
@@ -76,10 +76,6 @@ export default function MineHome() {
                 holdings={data.holdings}
                 onExpand={() => setSheetOpen(true)}
               />
-              {/* 연속 방문일 — 작고 은은하게. HoldingChips 아래 */}
-              {visitStreak?.message && (
-                <div className="visit-streak-line">{visitStreak.message}</div>
-              )}
               {/* 광맥 레이더 — 이벤트 있을 때만 표시 */}
               <RadarPanel market={market} />
             </div>
