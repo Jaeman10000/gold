@@ -334,6 +334,44 @@ body {
 .pill-label { font-size: 14px; color: rgba(255,255,255,.55); font-weight: 500; }
 .pill-amount { font-size: 20px; font-weight: 800; }
 
+/* [C] 업적·연속투자일 한 줄 (레벨 게이지 아래) */
+.achievement-line {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 12px; font-weight: 700; color: var(--gold-bright);
+  background: rgba(232,179,57,.1); border: 1px solid rgba(232,179,57,.22);
+  border-radius: 8px; padding: 5px 10px; align-self: flex-start;
+}
+.achievement-line .ach-icon { font-size: 12px; }
+
+/* [B] 오늘의 수급 한 줄 (수익률 알약 아래) */
+.supply-line {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12px; font-weight: 600; color: rgba(255,255,255,.78);
+  background: rgba(12,8,4,.7); border: 1px solid var(--line);
+  border-radius: 999px; padding: 6px 14px; backdrop-filter: blur(6px);
+  white-space: nowrap;
+}
+
+/* ---------- 뉴스 화면 ---------- */
+.news-body { display: flex; flex-direction: column; gap: 10px; padding-bottom: 8px; }
+.news-list { display: flex; flex-direction: column; gap: 10px; }
+.news-card {
+  display: block; text-decoration: none; color: inherit;
+  background: var(--card, rgba(20,16,11,.55)); border: 1px solid var(--line);
+  border-radius: 12px; padding: 12px 14px;
+}
+.news-card:active { background: rgba(232,179,57,.08); }
+.news-card-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.news-stock-tag {
+  font-size: 11px; font-weight: 700; color: var(--gold);
+  background: rgba(232,179,57,.12); border: 1px solid rgba(232,179,57,.25);
+  border-radius: 8px; padding: 2px 8px;
+}
+.news-time { font-size: 11px; color: var(--text-dim); }
+.news-title { font-size: 14px; font-weight: 600; line-height: 1.4; color: var(--text); }
+.news-press { font-size: 11px; color: var(--text-dim); margin-top: 5px; }
+.news-empty { text-align: center; color: var(--text-dim); font-size: 13px; padding: 40px 16px; }
+
 /* 개별주 칩 — 2개씩 페이지. › 탭으로 다음 페이지(순환). 고정폭. */
 .holding-chips-wrap {
   position: relative;

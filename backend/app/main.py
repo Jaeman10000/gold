@@ -10,7 +10,17 @@ from fastapi.responses import JSONResponse
 
 from app.config import settings
 from app.db import init_db
-from app.routers import explore, import_router, level, portfolio, refresh, survey, vault
+from app.routers import (
+    explore,
+    highlights,
+    import_router,
+    level,
+    news,
+    portfolio,
+    refresh,
+    survey,
+    vault,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -53,6 +63,8 @@ app.include_router(import_router.router)
 app.include_router(explore.router)
 app.include_router(level.router)
 app.include_router(refresh.router)
+app.include_router(news.router)
+app.include_router(highlights.router)
 
 
 @app.on_event("startup")

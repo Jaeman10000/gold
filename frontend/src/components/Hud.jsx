@@ -4,7 +4,7 @@
 // 3단: 총 평가금액
 import MarketToggle from './MarketToggle'
 
-export default function Hud({ data, goldOverride, refreshing, levelData }) {
+export default function Hud({ data, goldOverride, refreshing, levelData, achievement }) {
   const { veinGrade, disposition } = data
   const goldText = goldOverride || data.goldAmountDisplay
 
@@ -60,6 +60,11 @@ export default function Hud({ data, goldOverride, refreshing, levelData }) {
           </span>
         </div>
       </div>
+
+      {/* [C] 연속투자일·업적 한 줄 */}
+      {achievement && (
+        <div className="achievement-line"><span className="ach-icon">🔥</span>{achievement}</div>
+      )}
 
       {/* 2단: 등급칩 · 시장토글 · 성향칩 */}
       <div className="h-row2">

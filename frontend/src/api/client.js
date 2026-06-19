@@ -44,5 +44,7 @@ export const api = {
   deleteTheme:     (market) => del(`/survey/theme?market=${market}`),
   exploreSearch:   (q, market) => get(`/explore/search?q=${encodeURIComponent(q)}&market=${market}`),
   exploreSimulate: (body) => post('/explore/simulate', body),
+  news:            (market) => get(`/news?market=${market}`),
+  highlights:      (market) => get(`/highlights?market=${market}`),
   upload,
 }

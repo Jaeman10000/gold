@@ -546,6 +546,41 @@ class KiwoomClient(DataProvider):
 
         return scores
 
+    def get_today_net_buy(self, tickers: list[str]) -> dict[str, dict]:
+        """ka10059 최신 영업일 외인·기관 순매수 금액(원). {ticker:{foreign,inst}}.
+
+        get_supply_scores 와 같은 API(ka10059) 재활용 — 홈 '오늘의 수급 한 줄'용.
+        items[0] = 최신일. 실패 종목은 결과에서 제외.
+        """
+        from datetime import date
+
+        today = date.today().strftime("%Y%m%d")
+        out: dict[str, dict] = {}
+        for ticker in tickers:
+            try:
+                raw = self._call_api(
+                    "/api/dostk/stkinfo",
+                    "ka10059",
+                    {
+                        "stk_cd": ticker,
+                        "dt": today,
+                        "amt_qty_tp": "1",
+                        "trde_tp": "0",
+                        "unit_tp": "1",
+                    },
+                )
+                items: list[dict] = raw.get("stk_invsr_orgn") or []
+                if not items:
+                    continue
+                row = items[0]  # 최신 영업일
+                out[ticker] = {
+                    "foreign": _to_int(row.get("frgnr_invsr", 0)),
+                    "inst": _to_int(row.get("orgn", 0)),
+                }
+            except Exception as e:  # noqa: BLE001
+                logger.debug("ka10059 today %s 실패: %s", ticker, e)
+        return out
+
     # ── 디버그 (실계좌 응답 구조 확인용) ─────────────────────────────────────
 
     def raw_ka10073(self, strt_dt: str, end_dt: str) -> dict:

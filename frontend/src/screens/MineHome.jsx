@@ -1,7 +1,8 @@
 // 광산(홈) — 풀블리드 금광 씬 + 그 위 오버레이(HUD/수익률/칩/디스클레이머). CLAUDE.md §7.
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useScreenData, useDataStore } from '../store/dataStore'
 import { useMarket } from '../store/marketStore'
+import { api } from '../api/client'
 import MineScene from '../components/MineScene'
 import Hud from '../components/Hud'
 import ReturnPanel from '../components/ReturnPanel'
@@ -19,6 +20,12 @@ export default function MineHome() {
   const { data, loading, refreshing, error, cachedAt } = useScreenData('portfolio', market)
   const { refresh, levelData } = useDataStore()   // 전역 — 탭 전환 후에도 유지
   const [sheetOpen, setSheetOpen] = useState(false)
+  const [highlights, setHighlights] = useState(null)  // [B] 수급 + [C] 업적 한 줄
+
+  useEffect(() => {
+    setHighlights(null)
+    api.highlights(market).then(setHighlights).catch(() => {})
+  }, [market])
 
   const locked = data?.status === 'locked'
   const goldStr = data ? goldDisplay(data.market, data.goldAmount || 0) : ''
@@ -50,9 +57,12 @@ export default function MineHome() {
         <>
           {/* 헤더 패널 + 수익률 알약 + 종목 칩 (세로 스택) */}
           <div className="home-overlay">
-            <Hud data={data} goldOverride={goldStr} refreshing={refreshing} levelData={levelData} />
+            <Hud data={data} goldOverride={goldStr} refreshing={refreshing} levelData={levelData} achievement={highlights?.achievement} />
             <div className="home-pill-chips">
               <ReturnPanel data={data} onExpand={() => setSheetOpen(true)} />
+              {highlights?.supply?.text && (
+                <div className="supply-line">📊 {highlights.supply.text}</div>
+              )}
               <HoldingChips
                 holdings={data.holdings}
                 onExpand={() => setSheetOpen(true)}

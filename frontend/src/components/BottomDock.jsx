@@ -1,10 +1,10 @@
-// 하단 독 — 5칸 (CLAUDE.md §7). 연구소는 클릭 시 "준비 중" 화면으로.
+// 하단 독 — 5칸 (CLAUDE.md §7). 연구소(v2)는 보유종목 '뉴스'로 교체.
 const ITEMS = [
   { key: 'mine',    label: '광산',  icon: '⛏️' },
   { key: 'vault',   label: '금고',  icon: '🏰' },
   { key: 'survey',  label: '측량소', icon: '📐' },
   { key: 'explore', label: '탐사',  icon: '🧭' },
-  { key: 'lab',     label: '연구소', icon: '🔬', soon: true },
+  { key: 'news',    label: '뉴스',  icon: '📰' },
 ]
 
 export default function BottomDock({ active, onChange }) {

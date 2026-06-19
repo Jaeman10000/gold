@@ -6,11 +6,11 @@ import MineHome from './screens/MineHome'
 import Vault from './screens/Vault'
 import Survey from './screens/Survey'
 import Explore from './screens/Explore'
-import Lab from './screens/Lab'
+import News from './screens/News'
 import Passcode from './screens/Passcode'
 import LoadingMascot from './components/LoadingMascot'
 
-const SCREENS = { mine: MineHome, vault: Vault, survey: Survey, explore: Explore, lab: Lab }
+const SCREENS = { mine: MineHome, vault: Vault, survey: Survey, explore: Explore, news: News }
 const BASE = import.meta.env.VITE_API_URL || ''
 
 function AppInner() {
