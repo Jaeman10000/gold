@@ -261,7 +261,12 @@
 
 ## 10. 현재 상태 (LIVE — 갱신할 것)
 - ✅ **v1 완료 (2026-06-19)** — 광산·금고·측량소·탐사·레벨EXP·키움 실연동·DB 캐시·당겨서 새로고침
-- ⬜ 다음: Railway 배포 → 광부 명함 → v2
+- ✅ **Railway 배포 (2026-06-19, v1.5 1단계)** — backend·frontend 두 서비스 Online.
+  - backend: root=`backend`, `/data` 영구 볼륨(SQLite). frontend: root=`frontend`, nixpacks `vite preview`.
+  - 함정 해결: ① 서비스 Root Directory를 backend/frontend로 설정해야 격리형 빌드 성공(루트 빌드 시 Railpack 실패). ② `assets/`를 `frontend/`로 이동(격리 빌드가 ../assets 못 봄). ③ 패스코드 게이트가 CORS preflight(OPTIONS) 차단하던 버그 수정.
+  - ⚠️ **키움/DART 키 값이 짧아(8/10자) 인증 실패 → MockProvider 폴백.** 전체 키 재입력 필요.
+  - 상세: 메모리 `railway-deploy-setup`.
+- ⬜ 다음: 키움 키 정상화 → 광부 명함 → v2
 - ⚠️ **환경 불일치**: `backend/.venv`가 Python **3.14.5** (CLAUDE.md는 3.12 고정). 3.12 재구성 검토.
 - ⚠️ LS ELECTRIC 등 corp_code 미매핑 종목 보완 필요(현재 health_na 폴백).
 
