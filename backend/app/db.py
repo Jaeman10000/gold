@@ -8,7 +8,15 @@ from collections.abc import Generator
 from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
+from pathlib import Path
+
 from app.config import settings
+
+# SQLite: Railway Volume 경로 자동 생성 (sqlite:////data/... 형태의 절대경로 대응)
+if settings.database_url.startswith("sqlite"):
+    _db_path = settings.database_url.replace("sqlite:///", "")
+    if _db_path.startswith("/"):  # 절대 경로일 때만 (상대경로는 불필요)
+        Path(_db_path).parent.mkdir(parents=True, exist_ok=True)
 
 # SQLite 는 멀티스레드 접근 시 옵션 필요
 connect_args = {"check_same_thread": False} if settings.database_url.startswith("sqlite") else {}
@@ -21,10 +29,26 @@ class Base(DeclarativeBase):
 
 
 def init_db() -> None:
-    """앱 시작 시 테이블 생성 (없을 때만)."""
+    """앱 시작 시 테이블 생성 (없을 때만) + 컬럼 마이그레이션."""
     from app import models  # noqa: F401  (모델 등록을 위한 import)
 
     Base.metadata.create_all(bind=engine)
+    _migrate_add_columns()
+
+
+def _migrate_add_columns() -> None:
+    """기존 DB에 새 컬럼 추가 (없을 때만, SQLite ALTER TABLE)."""
+    from sqlalchemy import text
+    migrations = [
+        ("dividends", "source", "VARCHAR DEFAULT 'csv'"),
+    ]
+    with engine.connect() as conn:
+        for table, col, col_def in migrations:
+            try:
+                conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {col} {col_def}"))
+                conn.commit()
+            except Exception:
+                pass  # 이미 존재하면 무시
 
 
 def get_db() -> Generator[Session, None, None]:

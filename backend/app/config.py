@@ -22,6 +22,9 @@ class Settings(BaseSettings):
     # CORS (콤마 구분)
     cors_origins: str = "http://localhost:5173"
 
+    # 패스코드 접근 제한 (v1.5 싱글유저). 비어있으면 제한 없음(로컬 개발용).
+    app_passcode: str = ""
+
     @property
     def cors_origin_list(self) -> list[str]:
         return [o.strip() for o in self.cors_origins.split(",") if o.strip()]

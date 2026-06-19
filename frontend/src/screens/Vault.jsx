@@ -2,11 +2,13 @@
 import { useRef, useState, useEffect } from 'react'
 import { useScreenData, useDataStore } from '../store/dataStore'
 import { useMarket } from '../store/marketStore'
+import { api } from '../api/client'
 import MarketToggle from '../components/MarketToggle'
 import LockedOverlay from '../components/LockedOverlay'
 import LoadingMascot from '../components/LoadingMascot'
 import ErrorState from '../components/ErrorState'
-import { money, profitColor } from '../utils/format'
+import PullToRefresh from '../components/PullToRefresh'
+import { money, profitColor, timeAgo } from '../utils/format'
 
 // 백엔드 exp_config와 동일한 공식 (sell_w=10, cap=30, min=1)
 // realizedPnl=0 이면 키움 매수단가 미확보 → EXP 0
@@ -42,7 +44,7 @@ function fmtDate(str) {
 
 export default function Vault() {
   const { market } = useMarket()
-  const { data, loading, refreshing, error } = useScreenData('vault', market)
+  const { data, loading, refreshing, error, cachedAt } = useScreenData('vault', market)
   const { refresh } = useDataStore()
   const tradesRef = useRef(null)
   const divsRef   = useRef(null)
@@ -50,10 +52,7 @@ export default function Vault() {
   const [importing, setImporting] = useState(false)
   const [period, setPeriod] = useState('all')
 
-  // 금고 진입 시 EXP 동기화 (최신 익절 기록 DB 반영)
-  useEffect(() => {
-    fetch('/api/level/sync', { method: 'POST' }).catch(() => {})
-  }, [])
+  // EXP 동기화는 /api/refresh에서 자동 처리 (dataStore 백그라운드 갱신)
 
   const locked = data?.status === 'locked'
   const sym    = data?.currencySymbol || '₩'
@@ -65,10 +64,7 @@ export default function Vault() {
     const form = new FormData()
     form.append('file', file)
     try {
-      const res = await fetch(`/api/import/${endpoint}?market=${market}`, {
-        method: 'POST', body: form,
-      })
-      const d = await res.json()
+      const d = await api.upload(`/import/${endpoint}?market=${market}`, form)
       if (d.error) throw new Error(d.error)
       setImportMsg(`✓ ${d.inserted}건 추가, ${d.skipped}건 중복 건너뜀`)
       refresh(market)
@@ -146,6 +142,7 @@ export default function Vault() {
   }
 
   return (
+    <PullToRefresh onRefresh={() => refresh(market)} refreshing={refreshing}>
     <div className="screen vault">
       <header className="screen-header">
         <h2>금고 · 장부</h2>
@@ -193,6 +190,7 @@ export default function Vault() {
               </div>
             </div>
             <div className="vs-note">투자권유 아님 · 실현확정 수익 기준{period !== 'all' ? ` · ${PERIODS.find(p=>p.key===period)?.label} 기준` : ''}</div>
+            {cachedAt && <div className="last-updated">↻ {timeAgo(cachedAt)} 업데이트</div>}
           </section>
 
           {/* ── [2/3] 익절 기록 ─────────────────────────────────────────── */}
@@ -251,7 +249,7 @@ export default function Vault() {
               <div className="vault-empty">
                 <div className="vault-empty-icon">🌾</div>
                 <p>배당 내역이 없습니다.</p>
-                <p className="vault-empty-sub">HTS에서 배당 내역 CSV를 가져오면 레벨 EXP도 함께 적립됩니다.</p>
+                <p className="vault-empty-sub">보유 종목의 배당 내역은 새로고침 시 자동으로 추정됩니다.</p>
                 <input ref={divsRef} type="file" accept=".csv" style={{ display: 'none' }}
                   onChange={e => { handleImport(e.target.files[0], 'dividends'); e.target.value = '' }} />
                 <button className="vault-import-btn" onClick={() => divsRef.current?.click()} disabled={importing}>
@@ -259,14 +257,22 @@ export default function Vault() {
                 </button>
               </div>
             ) : (
-              divItems.map((d, i) => (
-                <div className="ledger-row" key={i}>
-                  <span className="lr-date">{d.date}</span>
-                  <span className="lr-name">{d.name || d.ticker}</span>
-                  <span className="lr-amt profit">+{money(sym, d.amount)}</span>
-                  <span className="pnl-exp-chip pos">+100</span>
+              <>
+                {divItems.map((d, i) => (
+                  <div className="ledger-row" key={i}>
+                    <span className="lr-date">{d.date}</span>
+                    <span className="lr-name">{d.name || d.ticker}</span>
+                    {d.source === 'dart_inferred' && (
+                      <span className="div-inferred-badge" title="DART 공시 DPS 기반 추정값. 세전 금액. 실제 수령액과 다를 수 있습니다.">추정</span>
+                    )}
+                    <span className="lr-amt profit">+{money(sym, d.amount)}</span>
+                    <span className="pnl-exp-chip pos">+100</span>
+                  </div>
+                ))}
+                <div className="div-inferred-note">
+                  추정: DART 공시 DPS 기반 · 세전 · 12월 결산 법인 기준 · 투자권유 아님
                 </div>
-              ))
+              </>
             )}
           </section>
 
@@ -280,5 +286,6 @@ export default function Vault() {
         </div>
       )}
     </div>
+    </PullToRefresh>
   )
 }

@@ -4,24 +4,38 @@
 """
 import logging
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from app.config import settings
 from app.db import init_db
-from app.routers import explore, import_router, level, portfolio, survey, vault
+from app.routers import explore, import_router, level, portfolio, refresh, survey, vault
 
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="광맥 (Gwangmaek) API", version="0.1.0")
 
+# CORS 는 패스코드 미들웨어보다 먼저 등록 (preflight OPTIONS 응답을 위해)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origin_list,
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*"],
+    allow_headers=["*", "X-Passcode"],
 )
+
+_PASSCODE_EXEMPT = {"/api/health"}  # Railway 헬스체크는 패스코드 없이 통과
+
+
+@app.middleware("http")
+async def passcode_gate(request: Request, call_next):
+    """APP_PASSCODE 설정 시 모든 API에 X-Passcode 헤더 검증. 빈 값이면 개발 모드(무제한)."""
+    if not settings.app_passcode or request.url.path in _PASSCODE_EXEMPT:
+        return await call_next(request)
+    if request.headers.get("X-Passcode", "") != settings.app_passcode:
+        return JSONResponse({"detail": "패스코드가 맞지 않아요"}, status_code=401)
+    return await call_next(request)
 
 app.include_router(portfolio.router)
 app.include_router(vault.router)
@@ -29,6 +43,7 @@ app.include_router(survey.router)
 app.include_router(import_router.router)
 app.include_router(explore.router)
 app.include_router(level.router)
+app.include_router(refresh.router)
 
 
 @app.on_event("startup")
@@ -163,6 +178,12 @@ def admin_dart_update() -> dict:
     if count:
         return {"status": "ok", "corp_count": count}
     return {"status": "error", "msg": "DART_API_KEY 미설정이거나 다운로드 실패"}
+
+
+@app.get("/api/auth/check")
+def auth_check() -> dict:
+    """패스코드 검증용 — 미들웨어를 통과했으면 올바른 패스코드. APP_PASSCODE 미설정 시 항상 200."""
+    return {"ok": True}
 
 
 @app.get("/api/health")

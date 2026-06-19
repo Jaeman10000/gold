@@ -3,6 +3,7 @@
 import { useRef, useState, useMemo } from 'react'
 import { useMarket } from '../store/marketStore'
 import { useScreenData } from '../store/dataStore'
+import { api } from '../api/client'
 import ErrorState from '../components/ErrorState'
 
 // 한국어 조사 선택: 받침 있으면 "이", 없으면 "가"
@@ -57,8 +58,7 @@ export default function Explore() {
 
   async function runSearch(q) {
     try {
-      const res = await fetch(`/api/explore/search?q=${encodeURIComponent(q)}&market=${market}`)
-      const data = await res.json()
+      const data = await api.exploreSearch(q, market)
       setSearchResults(data.results || [])
       setSearchNote(data.note || '')
       setSearchState('done')
@@ -94,17 +94,12 @@ export default function Explore() {
     setSimResult(null)
     setSimError('')
     try {
-      const res = await fetch('/api/explore/simulate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          market,
-          ticker: selected.ticker,
-          name: selected.name,
-          targetWeight: weight,
-        }),
+      const data = await api.exploreSimulate({
+        market,
+        ticker: selected.ticker,
+        name: selected.name,
+        targetWeight: weight,
       })
-      const data = await res.json()
       if (data.status === 'error') {
         setSimError(data.msg || '시뮬레이션 오류')
         setSimState('error')
