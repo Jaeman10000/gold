@@ -271,42 +271,6 @@ const SCORE_EXPLAIN = {
   ],
 }
 
-// [2] 테마 맥락 통합 카드 — 선택 테마 전체 통합 4~5줄, 투자권유 아님
-function ThemeContextMergedCard({ themeContexts }) {
-  const names = themeContexts.map(tc => tc.label).join(' + ')
-  // 각 테마에서 첫 번째 항목만, 최대 2개씩
-  const pros = themeContexts.flatMap(tc => (tc.pros || []).slice(0, 1)).slice(0, 2)
-  const cons = themeContexts.flatMap(tc => (tc.cons || []).slice(0, 1)).slice(0, 2)
-  return (
-    <section className="card theme-context-card">
-      <div className="card-title">
-        테마 시장 맥락
-        <span className="card-title-sub">균형 정보 · 투자권유 아님</span>
-      </div>
-      <div className="tc-theme-names">선택 테마: {names}</div>
-      {pros.length > 0 && (
-        <div className="tc-side">
-          <span className="tc-side-label pos">긍정 전망</span>
-          <ul className="tc-list">
-            {pros.map((p, i) => <li key={i}>{p}</li>)}
-          </ul>
-        </div>
-      )}
-      {cons.length > 0 && (
-        <div className="tc-side">
-          <span className="tc-side-label neg">리스크</span>
-          <ul className="tc-list">
-            {cons.map((c, i) => <li key={i}>{c}</li>)}
-          </ul>
-        </div>
-      )}
-      <div className="tc-disclaimer">
-        시장 일반 맥락이며 투자권유 아님. 종목 추천 아님. 판단은 본인 몫입니다.
-      </div>
-    </section>
-  )
-}
-
 function ScoreExplainCard({ mode }) {
   const [open, setOpen] = useState(false)
   const items = SCORE_EXPLAIN[mode] || SCORE_EXPLAIN.basic
@@ -409,8 +373,8 @@ export default function Survey() {
             </div>
           </div>
 
-          {/* ── 점수 해석 글 (규칙 기반, 투자권유 아님) ── */}
-          {data.interpretation && (
+          {/* ── 점수 해석 글 (기본 모드 전용 — 테마 모드 정렬도 텍스트는 정보 과부하로 제거) ── */}
+          {mode === 'basic' && data.interpretation && (
             <section className="interp-block">
               <div className="interp-row">
                 <span className="interp-dot fact" />
@@ -434,70 +398,33 @@ export default function Survey() {
                 내 포트폴리오 성향
                 <span className="card-title-sub">스타일 정체성 · 우열 아님</span>
               </div>
-              <div className="disp-type-row">
-                <span className="disp-type-chip">{data.disposition.type}</span>
-                <span className="disp-summary">{data.disposition.summary}</span>
-              </div>
+              <div className="disp-type-big">{data.disposition.type}</div>
               <ul className="disp-chars">
-                {data.disposition.chars.map((c, i) => (
+                {data.disposition.chars.slice(0, 3).map((c, i) => (
                   <li className="disp-char" key={i}>{c}</li>
                 ))}
               </ul>
-              <div className="disp-factors">
-                {data.disposition.factors.map((f, i) => (
-                  <span className="disp-factor-chip" key={i}>{f}</span>
-                ))}
-              </div>
-              <div className="disp-note">{data.disposition.note}</div>
             </section>
           )}
 
-          {/* ── 구성요소 분해 ── */}
-          <section className="card">
-            {mode === 'basic' ? (
-              <>
-                <div className="card-title">점수 구성 <span className="card-title-sub">재무건전성 50 · 수급 30 · 시장신뢰 20</span></div>
-                {data.components.map(c => (
-                  <div className="comp-row" key={c.key}>
-                    <div className="comp-head">
-                      <span className="comp-key">{c.key}</span>
-                      <span className="comp-weight">×{c.weight}%</span>
-                      <span className="comp-score" style={{ color: scoreColor(c.score) }}>
-                        {c.score ?? 'N/A'}
-                      </span>
-                    </div>
-                    <ScoreBar value={c.score} />
-                    <div className="comp-desc">{COMP_NOTE[c.key] || c.note}</div>
+          {/* ── 구성요소 분해 (기본 모드 전용 — 테마 정렬 분석은 정보 과부하로 제거) ── */}
+          {mode === 'basic' && (
+            <section className="card">
+              <div className="card-title">점수 구성 <span className="card-title-sub">재무건전성 50 · 수급 30 · 시장신뢰 20</span></div>
+              {data.components.map(c => (
+                <div className="comp-row" key={c.key}>
+                  <div className="comp-head">
+                    <span className="comp-key">{c.key}</span>
+                    <span className="comp-weight">×{c.weight}%</span>
+                    <span className="comp-score" style={{ color: scoreColor(c.score) }}>
+                      {c.score ?? 'N/A'}
+                    </span>
                   </div>
-                ))}
-              </>
-            ) : (
-              <>
-                <div className="card-title">테마 정렬 분석</div>
-                {data.components.map(c => (
-                  <div className="comp-row" key={c.key}>
-                    <div className="comp-head">
-                      <span className="comp-key">{c.key}</span>
-                      <span className="comp-score" style={{ color: scoreColor(c.score) }}>
-                        {c.score !== null && c.score !== undefined ? `${c.score}${c.key === '정렬도' ? '%' : ''}` : 'N/A'}
-                      </span>
-                    </div>
-                    <ScoreBar value={c.score} />
-                    <div className="comp-desc">{c.note}</div>
-                  </div>
-                ))}
-                {data.theme?.selected?.length > 0 && (
-                  <div className="active-themes-row">
-                    {data.theme.selected.map(t => <span className="theme-tag" key={t}>{t}</span>)}
-                  </div>
-                )}
-              </>
-            )}
-          </section>
-
-          {/* ── [2] 테마 타당성 통합 요약 (테마 모드 전용) ── */}
-          {mode === 'theme' && data.themeContexts?.length > 0 && (
-            <ThemeContextMergedCard themeContexts={data.themeContexts} />
+                  <ScoreBar value={c.score} />
+                  <div className="comp-desc">{COMP_NOTE[c.key] || c.note}</div>
+                </div>
+              ))}
+            </section>
           )}
 
           {/* ── 종목별 기여도 ── */}

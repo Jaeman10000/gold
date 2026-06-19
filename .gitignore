@@ -48,3 +48,6 @@ screenshot_*.png
 *_shot.mjs
 *_shot.cjs
 take_screenshot.mjs
+
+frontend/shot.mjs
+frontend/shots/

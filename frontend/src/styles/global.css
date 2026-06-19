@@ -209,9 +209,10 @@ body {
 
 /* ---------- 홈 헤더 패널 (3단 구조: 티어/칩/금액) ---------- */
 .home-header-panel {
-  background: linear-gradient(180deg, rgba(12,8,4,.95) 0%, rgba(12,8,4,.90) 65%, rgba(12,8,4,0) 100%);
-  padding: 52px 16px 28px;
-  display: flex; flex-direction: column; gap: 12px;
+  background: linear-gradient(180deg, rgba(12,8,4,.95) 0%, rgba(12,8,4,.88) 60%, rgba(12,8,4,0) 100%);
+  /* 모바일 압축: 상단 패딩·간격 축소 → 광산 씬이 더 보이게. iPhone 노치는 safe-area 로 확보 */
+  padding: calc(env(safe-area-inset-top, 8px) + 12px) 16px 12px;
+  display: flex; flex-direction: column; gap: 8px;
 }
 
 /* 1단: 레벨 배지 + 아이콘 */
@@ -224,7 +225,7 @@ body {
 .lv-badge {
   position: relative;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  width: 52px; height: 60px;
+  width: 44px; height: 50px;
   /* 육각 결정 클립 */
   clip-path: polygon(50% 0%, 94% 25%, 94% 75%, 50% 100%, 6% 75%, 6% 25%);
   background: linear-gradient(155deg, #fce97a 0%, #e8b339 28%, #b8862b 60%, #7d5a1e 100%);
@@ -245,7 +246,7 @@ body {
   position: relative;
 }
 .lv-num {
-  font-size: 26px; font-weight: 900; font-style: italic;
+  font-size: 22px; font-weight: 900; font-style: italic;
   color: #1a0a02; line-height: 1; letter-spacing: -2px;
   text-shadow: 0 1px 0 rgba(255,255,255,.28), 0 -1px 0 rgba(0,0,0,.2);
   position: relative;
@@ -289,7 +290,7 @@ body {
 .h-row2 > * { flex: 1; min-width: 0; }
 .h-chip {
   display: block; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  font-size: 12px; font-weight: 600; padding: 8px 6px; border-radius: 10px;
+  font-size: 12px; font-weight: 600; padding: 6px 6px; border-radius: 10px;
   background: rgba(20,16,11,.76); border: 1px solid var(--line);
 }
 .h-chip.grade { color: var(--gold); }
@@ -300,12 +301,12 @@ body {
 }
 
 /* 3단: 총 평가금액 (중앙) */
-.h-row3 { text-align: center; padding: 2px 0 4px; }
-.h-amount-label { font-size: 12px; color: var(--text-dim); margin-bottom: 5px; }
+.h-row3 { text-align: center; padding: 0; }
+.h-amount-label { font-size: 11px; color: var(--text-dim); margin-bottom: 3px; }
 .h-amount-main { display: flex; align-items: baseline; justify-content: center; gap: 3px; }
-.h-amount-symbol { font-size: 24px; font-weight: 900; color: var(--gold); }
+.h-amount-symbol { font-size: 20px; font-weight: 900; color: var(--gold); }
 .h-amount-num {
-  font-size: 38px; font-weight: 900; color: var(--text);
+  font-size: 31px; font-weight: 900; color: var(--text);
   letter-spacing: -1.5px; line-height: 1;
   text-shadow: 0 0 20px rgba(247,207,90,.25);
 }
@@ -646,6 +647,14 @@ body {
 
 /* ── [1] 성향 카드 ── */
 .disposition-card {}
+/* 성향 타입 — 크게·눈에 확 띄게 (정보 과부하 제거: 요약 문장 삭제, 3개 특성만) */
+.disp-type-big {
+  font-size: 1.9rem; font-weight: 900; line-height: 1.1;
+  background: linear-gradient(135deg, var(--gold-bright), var(--gold-deep));
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: var(--gold-bright);
+  margin: 4px 0 14px; letter-spacing: -0.5px;
+}
 .disp-type-row { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 12px; }
 .disp-type-chip { background: linear-gradient(135deg, var(--gold-deep), var(--gold)); color: #1a1000; font-weight: 700; font-size: 0.78rem; padding: 3px 10px; border-radius: 12px; white-space: nowrap; flex-shrink: 0; }
 .disp-summary { font-size: 0.88rem; color: var(--text); line-height: 1.5; }
