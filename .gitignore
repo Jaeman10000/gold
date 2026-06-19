@@ -40,6 +40,7 @@ secrets/
 
 # Logs
 *.log
+*.out
 
 # Dev screenshots / scratch (검증용 일회성 산출물)
 ss_*.png

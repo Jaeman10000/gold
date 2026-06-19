@@ -9,6 +9,7 @@ import HoldingChips from '../components/HoldingChips'
 import HoldingsSheet from '../components/HoldingsSheet'
 import LockedOverlay from '../components/LockedOverlay'
 import LoadingMascot from '../components/LoadingMascot'
+import RestoreReveal from '../components/RestoreReveal'
 import { goldDisplay } from '../utils/format'
 
 const FLY_MS = 1200
@@ -26,7 +27,7 @@ export default function MineHome() {
   const [levelData, setLevelData] = useState(null)
 
   useEffect(() => {
-    fetch('/api/level').then(r => r.json()).then(setLevelData).catch(() => {})
+    fetch('/api/level?sync=true').then(r => r.json()).then(setLevelData).catch(() => {})
   }, [])
 
   const locked = data?.status === 'locked'
@@ -93,6 +94,11 @@ export default function MineHome() {
       )}
 
       {locked && <LockedOverlay reason={data.reason} />}
+
+      {/* 과거 채굴 복원 연출 — 최초 1회 (백필 레벨을 선물처럼) */}
+      {!locked && (
+        <RestoreReveal eventCount={levelData?.eventCount} level={levelData?.level} />
+      )}
 
       {!loading && !locked && data && (
         <>

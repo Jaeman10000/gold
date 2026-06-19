@@ -69,6 +69,20 @@ class ExpEvent(Base):
     created_at: Mapped[str] = mapped_column(String)               # ISO 8601 UTC
 
 
+class AppMeta(Base):
+    """앱 전역 메타 키-값 (단일 사용자 v1).
+
+    용도: first_link_date = 최초 연동일(YYYYMMDD).
+    금고 '연동 이전(백필) / 연동 후(실시간)' 구분 + 복원 연출 기준.
+    1회 기록 후 불변 (덮어쓰지 않음).
+    """
+
+    __tablename__ = "app_meta"
+
+    key: Mapped[str] = mapped_column(String, primary_key=True)
+    value: Mapped[str] = mapped_column(String)
+
+
 class UserTheme(Base):
     """사용자 테마 설정 — 측량소 테마 모드 영속 저장.
 

@@ -115,11 +115,6 @@ body {
   pointer-events: none;
   filter: drop-shadow(0 4px 8px rgba(0,0,0,.6));
 }
-/* 앞쪽(카메라 가까운): 크게 */
-.cart-front {
-  left: 50%; top: 69.5%;
-  transform: translate(-50%, -50%) scale(1.06);
-}
 /* 좌측 뒤: 작게 + 살짝 어둡게 */
 .cart-back-left {
   left: 18%; top: 58%;
@@ -525,13 +520,61 @@ body {
   border-radius: 16px; padding: 18px 16px 14px;
   display: flex; flex-direction: column; gap: 8px;
 }
+.vs-header-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
 .vs-label { font-size: 11px; color: var(--text-dim); font-weight: 600; letter-spacing: .3px; }
+.vs-period-btns { display: flex; gap: 4px; flex-shrink: 0; }
+.vs-period-btn {
+  font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 20px;
+  border: 1px solid rgba(232,179,57,.3); background: transparent;
+  color: var(--text-dim); cursor: pointer; transition: all .15s;
+}
+.vs-period-btn:hover { border-color: var(--gold); color: var(--gold); }
+.vs-period-btn.active { background: var(--gold); color: #1a1000; border-color: var(--gold); }
 .vs-total { font-size: 30px; font-weight: 900; line-height: 1; letter-spacing: -1px; }
 .vs-breakdown { display: flex; align-items: center; gap: 12px; margin-top: 2px; }
 .vs-item { display: flex; flex-direction: column; gap: 2px; }
 .vs-item-label { font-size: 10px; color: var(--text-dim); }
 .vs-item-val { font-size: 14px; font-weight: 700; color: var(--text); }
 .vs-plus { font-size: 18px; color: var(--text-dim); opacity: .5; margin-top: 10px; }
+
+/* ── 익절 테이블 연동 전/후 구분선 ─────────────────────────────────── */
+.pnl-divider {
+  text-align: center; font-size: 10px; font-weight: 700; letter-spacing: .5px;
+  padding: 8px 0 6px; margin-top: 4px;
+}
+.pnl-divider.live     { color: var(--gold); }
+.pnl-divider.backfill { color: var(--text-dim); opacity: .7; }
+
+/* ── 과거 채굴 복원 연출 (최초 1회) ───────────────────────────────── */
+.restore-reveal {
+  position: fixed; inset: 0; z-index: 200;
+  display: flex; align-items: center; justify-content: center;
+  background: radial-gradient(circle at 50% 45%, rgba(40,28,8,.96), rgba(8,6,3,.99));
+  cursor: pointer; animation: rr-in .4s ease;
+}
+.restore-reveal.fade-out { animation: rr-out .7s ease forwards; }
+@keyframes rr-in  { from { opacity: 0; } to { opacity: 1; } }
+@keyframes rr-out { to { opacity: 0; } }
+.rr-inner { text-align: center; padding: 0 28px; }
+.rr-spinner {
+  width: 46px; height: 46px; margin: 0 auto 18px;
+  border: 3px solid rgba(232,179,57,.2); border-top-color: var(--gold);
+  border-radius: 50%; animation: rr-spin .8s linear infinite;
+}
+@keyframes rr-spin { to { transform: rotate(360deg); } }
+.rr-title { font-size: 16px; font-weight: 800; color: var(--gold); letter-spacing: .5px; }
+.rr-sub   { font-size: 12px; color: var(--text-dim); margin-top: 8px; }
+.rr-result { animation: rr-pop .5s cubic-bezier(.18,.9,.3,1.3); }
+@keyframes rr-pop { from { transform: scale(.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.rr-gem   { font-size: 52px; filter: drop-shadow(0 0 18px rgba(232,179,57,.7)); animation: rr-float 2s ease-in-out infinite; }
+@keyframes rr-float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+.rr-found { font-size: 15px; color: var(--text); margin-top: 14px; }
+.rr-found b { color: var(--gold); font-size: 18px; }
+.rr-level {
+  font-size: 32px; font-weight: 900; color: var(--gold); margin-top: 6px;
+  letter-spacing: -.5px; text-shadow: 0 0 22px rgba(232,179,57,.6);
+}
+.rr-skip { font-size: 11px; color: var(--text-dim); opacity: .6; margin-top: 22px; }
 .vs-note { font-size: 10px; color: var(--text-dim); opacity: .6; margin-top: 2px; }
 
 /* ── 금고: 익절 기록 테이블 ─────────────────────────────────────────────────── */

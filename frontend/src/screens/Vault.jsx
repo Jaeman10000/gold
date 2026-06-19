@@ -1,5 +1,5 @@
 // 금고 — 매매·배당 자동기록 장부 (CLAUDE.md §7). v1 핵심.
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import { useScreenData, useDataStore } from '../store/dataStore'
 import { useMarket } from '../store/marketStore'
 import MarketToggle from '../components/MarketToggle'
@@ -8,9 +8,29 @@ import LoadingMascot from '../components/LoadingMascot'
 import { money, profitColor } from '../utils/format'
 
 // 백엔드 exp_config와 동일한 공식 (sell_w=10, cap=30, min=1)
-function calcExp(returnRate) {
+// realizedPnl=0 이면 키움 매수단가 미확보 → EXP 0
+function calcExp(returnRate, realizedPnl) {
+  if (realizedPnl <= 0) return 0
   if (returnRate < 1.0) return 0
   return Math.round(10 * Math.min(returnRate, 30))
+}
+
+// 날짜+종목 기준 분할 체결 합산 — 키움 ka10073이 체결 단위로 쪼개서 반환
+function groupPnl(items) {
+  const map = {}
+  for (const item of items) {
+    const key = `${item.date}|${item.ticker}`
+    if (!map[key]) {
+      map[key] = { ...item, sellQty: 0, realizedPnl: 0, _wRate: 0 }
+    }
+    const g = map[key]
+    g.realizedPnl += item.realizedPnl
+    g.sellQty     += item.sellQty
+    g._wRate      += item.returnRate * item.sellQty
+  }
+  return Object.values(map)
+    .map(g => ({ ...g, returnRate: g.sellQty ? Math.round(g._wRate / g.sellQty * 10) / 10 : 0 }))
+    .sort((a, b) => b.date.localeCompare(a.date))
 }
 
 // "20260617" → "06/17"
@@ -27,6 +47,12 @@ export default function Vault() {
   const divsRef   = useRef(null)
   const [importMsg, setImportMsg] = useState(null)
   const [importing, setImporting] = useState(false)
+  const [period, setPeriod] = useState('all')
+
+  // 금고 진입 시 EXP 동기화 (최신 익절 기록 DB 반영)
+  useEffect(() => {
+    fetch('/api/level/sync', { method: 'POST' }).catch(() => {})
+  }, [])
 
   const locked = data?.status === 'locked'
   const sym    = data?.currencySymbol || '₩'
@@ -52,9 +78,71 @@ export default function Vault() {
     }
   }
 
-  const realizedTotal = (data?.realizedPnlTotal || 0) + (data?.dividendTotal || 0)
-  const pnlItems = data?.realizedPnl   || []
-  const divItems = data?.dividends     || []
+  const allPnlItems = groupPnl(data?.realizedPnl || [])
+  const divItems    = data?.dividends || []
+
+  // 기간 필터 — YYYYMMDD 비교
+  const PERIODS = [
+    { key: '1w', label: '1주' },
+    { key: '1m', label: '1달' },
+    { key: '3m', label: '3달' },
+    { key: '6m', label: '6달' },
+    { key: '1y', label: '1년' },
+  ]
+  function periodStartDate(p) {
+    const d = new Date()
+    if (p === '1w') d.setDate(d.getDate() - 7)
+    else if (p === '1m') d.setMonth(d.getMonth() - 1)
+    else if (p === '3m') d.setMonth(d.getMonth() - 3)
+    else if (p === '6m') d.setMonth(d.getMonth() - 6)
+    else if (p === '1y') d.setFullYear(d.getFullYear() - 1)
+    return d.toISOString().slice(0, 10).replace(/-/g, '') // YYYYMMDD
+  }
+  const pnlItems = period === 'all'
+    ? allPnlItems
+    : allPnlItems.filter(item => item.date >= periodStartDate(period))
+
+  // 연동일 기준 분기 — date < firstLinkDate = 백필(연동 이전), 이상 = 실시간(연동 후)
+  const firstLink = data?.firstLinkDate || null
+  const liveItems   = firstLink ? pnlItems.filter(i => i.date >= firstLink) : pnlItems
+  const backfillItems = firstLink ? pnlItems.filter(i => i.date <  firstLink) : []
+
+  // 누적 요약 — 전체 기간은 항상 금색(단조 증가 의미), 기간 필터 시 양/음 색상
+  const fullPnlTotal = data?.realizedPnlTotal || 0
+  const fullDivTotal = data?.dividendTotal || 0
+  const filteredPnl  = pnlItems.reduce((s, i) => s + i.realizedPnl, 0)
+  const filteredDiv  = period === 'all'
+    ? fullDivTotal
+    : divItems.filter(d => d.date.replace(/-/g, '') >= periodStartDate(period))
+              .reduce((s, d) => s + d.amount, 0)
+  const displayTotal = period === 'all'
+    ? fullPnlTotal + fullDivTotal
+    : filteredPnl + filteredDiv
+  const totalColor = period === 'all'
+    ? 'var(--gold)'
+    : displayTotal >= 0 ? 'var(--profit)' : 'var(--loss)'
+
+  // 익절 1행 렌더 (연동 전/후 섹션 공용)
+  function renderPnlRow(item, i) {
+    const exp = calcExp(item.returnRate, item.realizedPnl)
+    const rateColor = profitColor(item.returnRate)
+    const pnlColor  = profitColor(item.realizedPnl)
+    return (
+      <div className="pnl-row" key={i}>
+        <span className="pnl-date">{fmtDate(item.date)}</span>
+        <span className="pnl-name">{item.name || item.ticker}</span>
+        <span className="pnl-rate" style={{ color: rateColor }}>
+          {item.returnRate > 0 ? '+' : ''}{item.returnRate.toFixed(1)}%
+        </span>
+        <span className="pnl-pnl" style={{ color: pnlColor }}>
+          {item.realizedPnl >= 0 ? '+' : ''}{money(sym, item.realizedPnl)}
+        </span>
+        <span className={`pnl-exp-chip ${exp > 0 ? 'pos' : 'zero'}`}>
+          {exp > 0 ? `+${exp}` : '—'}
+        </span>
+      </div>
+    )
+  }
 
   return (
     <div className="screen vault">
@@ -77,29 +165,42 @@ export default function Vault() {
 
           {/* ── [1] 누적 실현수익 요약 카드 ─────────────────────────────── */}
           <section className="vault-summary-card">
-            <div className="vs-label">앱 연동 후 누적 실현수익</div>
-            <div className="vs-total" style={{ color: realizedTotal >= 0 ? 'var(--profit)' : 'var(--loss)' }}>
-              {realizedTotal >= 0 ? '+' : ''}{money(sym, realizedTotal)}
+            <div className="vs-header-row">
+              <div className="vs-label">앱 연동 후 누적 실현수익</div>
+              <div className="vs-period-btns">
+                {PERIODS.map(p => (
+                  <button
+                    key={p.key}
+                    className={`vs-period-btn${period === p.key ? ' active' : ''}`}
+                    onClick={() => setPeriod(period === p.key ? 'all' : p.key)}
+                  >{p.label}</button>
+                ))}
+              </div>
+            </div>
+            <div className="vs-total" style={{ color: totalColor }}>
+              {displayTotal >= 0 ? '+' : ''}{money(sym, displayTotal)}
             </div>
             <div className="vs-breakdown">
               <div className="vs-item">
                 <div className="vs-item-label">익절</div>
-                <div className="vs-item-val">{money(sym, data.realizedPnlTotal)}</div>
+                <div className="vs-item-val">{money(sym, period === 'all' ? fullPnlTotal : filteredPnl)}</div>
               </div>
               <div className="vs-plus">+</div>
               <div className="vs-item">
                 <div className="vs-item-label">배당</div>
-                <div className="vs-item-val">{money(sym, data.dividendTotal)}</div>
+                <div className="vs-item-val">{money(sym, filteredDiv)}</div>
               </div>
             </div>
-            <div className="vs-note">투자권유 아님 · 실현확정 수익 기준</div>
+            <div className="vs-note">투자권유 아님 · 실현확정 수익 기준{period !== 'all' ? ` · ${PERIODS.find(p=>p.key===period)?.label} 기준` : ''}</div>
           </section>
 
           {/* ── [2/3] 익절 기록 ─────────────────────────────────────────── */}
           <section className="card">
             <div className="card-title">
               익절 기록
-              <span className="card-title-sub">최근 3개월 · {pnlItems.length}건</span>
+              <span className="card-title-sub">
+                {period === 'all' ? '최근 3개월' : PERIODS.find(p=>p.key===period)?.label} · {pnlItems.length}건
+              </span>
             </div>
 
             {pnlItems.length === 0 ? (
@@ -122,26 +223,18 @@ export default function Vault() {
                   <span className="ph-pnl">실현손익</span>
                   <span className="ph-exp">EXP</span>
                 </div>
-                {pnlItems.map((item, i) => {
-                  const exp = calcExp(item.returnRate)
-                  const rateColor = profitColor(item.returnRate)
-                  const pnlColor  = profitColor(item.realizedPnl)
-                  return (
-                    <div className="pnl-row" key={i}>
-                      <span className="pnl-date">{fmtDate(item.date)}</span>
-                      <span className="pnl-name">{item.name || item.ticker}</span>
-                      <span className="pnl-rate" style={{ color: rateColor }}>
-                        {item.returnRate > 0 ? '+' : ''}{item.returnRate.toFixed(1)}%
-                      </span>
-                      <span className="pnl-pnl" style={{ color: pnlColor }}>
-                        {item.realizedPnl >= 0 ? '+' : ''}{money(sym, item.realizedPnl)}
-                      </span>
-                      <span className={`pnl-exp-chip ${exp > 0 ? 'pos' : 'zero'}`}>
-                        {exp > 0 ? `+${exp}` : '—'}
-                      </span>
-                    </div>
-                  )
-                })}
+
+                {/* 연동 후(실시간) — firstLink 없으면 구분 없이 전체가 여기로 */}
+                {liveItems.length > 0 && firstLink && (
+                  <div className="pnl-divider live">── 연동 후 · 실시간 채굴 ──</div>
+                )}
+                {liveItems.map(renderPnlRow)}
+
+                {/* 연동 이전(백필·복원) */}
+                {backfillItems.length > 0 && (
+                  <div className="pnl-divider backfill">── 연동 이전 기록 · 복원 ──</div>
+                )}
+                {backfillItems.map(renderPnlRow)}
               </div>
             )}
           </section>

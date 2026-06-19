@@ -116,9 +116,6 @@ export default function MineScene({
       <Miner variant="left" delayMs={0} />
       <Miner variant="right" delayMs={380} />
 
-      {/* 작업3: 앞쪽 카트 — 레일 앞편. 결정·일꾼 뒤에 그려 가장 앞으로 (크게) */}
-      <img className="layer cart-static cart-front" src={scene.cart} alt="" aria-hidden="true" />
-
       {/* [3-가] 자동 화살표 흐름: 광맥 → 금괴더미 (상시) */}
       <ArrowFlow className="flow-auto" path={PATH_AUTO} n={6} />
 

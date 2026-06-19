@@ -7,7 +7,7 @@
 from app.data.provider import get_provider
 from app.db import SessionLocal
 from app.models import Dividend, Trade
-from app.services import common
+from app.services import common, meta_service
 
 
 def _db_trades(market: str) -> list[dict]:
@@ -48,6 +48,41 @@ def _get_merged_trades(market: str, provider) -> list[dict]:
     return sorted(trades, key=lambda t: t["date"], reverse=True)
 
 
+def _group_realized_pnl(items: list[dict]) -> list[dict]:
+    """날짜+종목 기준 분할 체결 합산 — 1매도 주문을 1행으로 표시."""
+    groups: dict[tuple, dict] = {}
+    for item in items:
+        key = (item["date"], item["ticker"])
+        if key not in groups:
+            groups[key] = {
+                "date": item["date"],
+                "ticker": item["ticker"],
+                "name": item["name"],
+                "realizedPnl": 0,
+                "sellQty": 0,
+                "buyPrice": item["buyPrice"],
+                "_weighted_rate": 0.0,
+                "_qty_for_rate": 0,
+            }
+        g = groups[key]
+        g["realizedPnl"] += item["realizedPnl"]
+        g["sellQty"] += item["sellQty"]
+        if item["buyPrice"]:
+            g["buyPrice"] = item["buyPrice"]
+        # 수량 가중평균 수익률
+        g["_weighted_rate"] += item["returnRate"] * item["sellQty"]
+        g["_qty_for_rate"] += item["sellQty"]
+
+    result = []
+    for g in groups.values():
+        qty = g.pop("_qty_for_rate")
+        rate = g.pop("_weighted_rate")
+        g["returnRate"] = round(rate / qty, 2) if qty else 0.0
+        result.append(g)
+
+    return sorted(result, key=lambda x: x["date"], reverse=True)
+
+
 def build_vault(market: str) -> dict:
     provider = get_provider()
     if not provider.is_market_available(market):
@@ -60,8 +95,14 @@ def build_vault(market: str) -> dict:
 
     realized_pnl = []
     if hasattr(provider, "get_realized_pnl"):
-        realized_pnl = provider.get_realized_pnl(market)
+        realized_pnl = _group_realized_pnl(provider.get_realized_pnl(market))
     realized_total = sum(r["realizedPnl"] for r in realized_pnl)
+
+    db = SessionLocal()
+    try:
+        first_link_date = meta_service.get_first_link_date(db)
+    finally:
+        db.close()
 
     return {
         "status": "ok",
@@ -75,6 +116,7 @@ def build_vault(market: str) -> dict:
         "realizedPnl": realized_pnl,
         "realizedPnlTotal": realized_total,
         "realizedPnlTotalDisplay": common.format_amount(market, realized_total),
+        "firstLinkDate": first_link_date,
         "disclaimer": common.DISCLAIMER,
     }
 

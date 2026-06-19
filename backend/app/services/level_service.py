@@ -17,6 +17,7 @@ from datetime import datetime, timezone
 from sqlalchemy.orm import Session
 
 from app.models import Dividend, ExpEvent
+from app.services import meta_service
 from app.services.exp_config import (
     DIV_BASE,
     LV_BASE,
@@ -105,11 +106,15 @@ def sync_sell_exp(provider, db: Session) -> int:
     inserted = 0
     for item in items:
         return_rate = float(item.get("returnRate", 0))
+        realized_pnl = int(item.get("realizedPnl", 0))
         ticker = str(item.get("ticker", ""))
         date_str = str(item.get("date", ""))
         sell_qty = int(item.get("sellQty", 0))
         sell_price = int(item.get("sellPrice", 0))
         buy_price = int(item.get("buyPrice", 0))
+        # realizedPnl=0 이면 키움이 매수단가를 못 줘서 손익 미확정 → EXP 없음
+        if realized_pnl <= 0:
+            continue
         # ref_key: 날짜+종목+수량+매도가+매수가 → 트랜잭션 식별
         ref_key = f"SELL|{date_str}|{ticker}|{sell_qty}|{sell_price}|{buy_price}"
         exp = compute_sell_exp(return_rate)
@@ -178,6 +183,8 @@ def get_level_summary(db: Session) -> dict:
         for e in events[:10]
     ]
 
+    first_link_date = meta_service.get_first_link_date(db)
+
     return {
         "level": lv["level"],
         "totalExp": total_exp,
@@ -187,6 +194,7 @@ def get_level_summary(db: Session) -> dict:
         "isMax": lv["isMax"],
         "expBySource": by_source,
         "eventCount": len(events),
+        "firstLinkDate": first_link_date,
         "recentEvents": recent,
         "levelCurve": {
             "needExpNext": lv["needExp"],
