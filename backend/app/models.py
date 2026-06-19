@@ -97,6 +97,34 @@ class DataCache(Base):
     cached_at: Mapped[str] = mapped_column(String)               # ISO8601 UTC
 
 
+class ScoreSnapshot(Base):
+    """일별 종목 펀더멘털 점수 스냅샷 — 광맥 레이더 점수변화 이벤트용.
+
+    /api/refresh 시 오늘 날짜로 upsert. 전일 대비 Δ≥5면 이벤트 생성.
+    """
+
+    __tablename__ = "score_snapshots"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    market: Mapped[str] = mapped_column(String, index=True)
+    ticker: Mapped[str] = mapped_column(String, index=True)
+    date: Mapped[str] = mapped_column(String, index=True)    # YYYYMMDD
+    fund_score: Mapped[float] = mapped_column(Float)
+
+
+class VisitLog(Base):
+    """방문 기록 — 연속 방문일 카운트용 (v1: 단일 사용자).
+
+    앱 열 때마다 GET /api/visit/streak 호출 → 오늘 날짜 upsert.
+    """
+
+    __tablename__ = "visit_log"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    date: Mapped[str] = mapped_column(String, index=True)    # YYYYMMDD
+    user_id: Mapped[str] = mapped_column(String, default="default", index=True)
+
+
 class UserTheme(Base):
     """사용자 테마 설정 — 측량소 테마 모드 영속 저장.
 

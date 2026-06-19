@@ -17,9 +17,11 @@ from app.routers import (
     level,
     news,
     portfolio,
+    radar,
     refresh,
     survey,
     vault,
+    visit,
 )
 
 logger = logging.getLogger(__name__)
@@ -65,6 +67,8 @@ app.include_router(level.router)
 app.include_router(refresh.router)
 app.include_router(news.router)
 app.include_router(highlights.router)
+app.include_router(radar.router)
+app.include_router(visit.router)
 
 
 @app.on_event("startup")

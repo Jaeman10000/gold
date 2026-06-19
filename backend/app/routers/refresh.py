@@ -3,7 +3,7 @@ from fastapi import APIRouter
 
 from app.data.provider import get_provider
 from app.db import SessionLocal
-from app.services import dividend_service, level_service, meta_service, portfolio_service, survey_service, vault_service
+from app.services import dividend_service, level_service, meta_service, portfolio_service, radar_service, survey_service, vault_service
 
 router = APIRouter()
 
@@ -31,6 +31,10 @@ def refresh_all(market: str = "KR") -> dict:
         level_service.sync_div_exp(db)
         meta_service.ensure_first_link_date(db)
         level_summary = level_service.get_level_summary(db)
+        # 레이더 점수변화 이벤트용 — survey contributions → ScoreSnapshot upsert
+        radar_service.save_score_snapshots(
+            market, survey.get("contributions", []), db
+        )
     finally:
         db.close()
 

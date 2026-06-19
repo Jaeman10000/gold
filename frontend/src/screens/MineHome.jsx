@@ -13,6 +13,7 @@ import LoadingMascot from '../components/LoadingMascot'
 import RestoreReveal from '../components/RestoreReveal'
 import ErrorState from '../components/ErrorState'
 import SupplyDetailSheet from '../components/SupplyDetailSheet'
+import RadarPanel from '../components/RadarPanel'
 import { goldDisplay, timeAgo } from '../utils/format'
 
 export default function MineHome() {
@@ -22,11 +23,17 @@ export default function MineHome() {
   const [sheetOpen, setSheetOpen] = useState(false)
   const [supplySheetOpen, setSupplySheetOpen] = useState(false)
   const [highlights, setHighlights] = useState(null)  // [B] 수급 + [C] 업적 한 줄
+  const [visitStreak, setVisitStreak] = useState(null) // 연속 방문일
 
   useEffect(() => {
     setHighlights(null)
     api.highlights(market).then(setHighlights).catch(() => {})
   }, [market])
+
+  // 앱 열 때 1회 방문 기록 + 연속일 조회 (market 무관)
+  useEffect(() => {
+    api.visitStreak().then(setVisitStreak).catch(() => {})
+  }, [])
 
   const locked = data?.status === 'locked'
   const goldStr = data ? goldDisplay(data.market, data.goldAmount || 0) : ''
@@ -69,6 +76,12 @@ export default function MineHome() {
                 holdings={data.holdings}
                 onExpand={() => setSheetOpen(true)}
               />
+              {/* 연속 방문일 — 작고 은은하게. HoldingChips 아래 */}
+              {visitStreak?.message && (
+                <div className="visit-streak-line">{visitStreak.message}</div>
+              )}
+              {/* 광맥 레이더 — 이벤트 있을 때만 표시 */}
+              <RadarPanel market={market} />
             </div>
           </div>
           {cachedAt && (

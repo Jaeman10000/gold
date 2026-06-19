@@ -47,5 +47,7 @@ export const api = {
   news:            (market) => get(`/news?market=${market}`),
   newsForTicker:   (market, ticker) => get(`/news?market=${market}&ticker=${encodeURIComponent(ticker)}`),
   highlights:      (market) => get(`/highlights?market=${market}`),
+  radar:           (market) => get(`/radar?market=${market}`),
+  visitStreak:     () => get('/visit/streak'),
   upload,
 }

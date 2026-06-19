@@ -1203,3 +1203,75 @@ body {
   color: #1a1206; border: none; border-radius: 10px; cursor: pointer;
 }
 .passcode-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+/* ========== 연속 방문일 한 줄 (홈 — 작고 은은하게) ========== */
+.visit-streak-line {
+  font-size: 11.5px;
+  color: var(--text-dim);
+  text-align: center;
+  padding: 4px 12px 2px;
+  opacity: 0.8;
+  letter-spacing: 0.01em;
+}
+
+/* ========== 광맥 레이더 패널 ========== */
+.radar-panel {
+  margin: 6px 4px 0;
+  background: rgba(20,16,11,.72);
+  border: 1px solid rgba(232,179,57,.2);
+  border-radius: 14px;
+  padding: 10px 10px 8px;
+  backdrop-filter: blur(6px);
+}
+.radar-header {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-bottom: 8px;
+  padding: 0 2px;
+}
+.radar-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--gold-bright);
+  letter-spacing: 0.02em;
+}
+.radar-sub {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+.radar-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+}
+.radar-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(232,179,57,.14);
+  background: rgba(14,11,7,.55);
+  cursor: pointer;
+  text-align: left;
+  transition: background .15s, border-color .15s;
+  min-width: 0;
+}
+.radar-card:hover { background: rgba(232,179,57,.09); border-color: rgba(232,179,57,.3); }
+.radar-card:active { transform: scale(.97); }
+.rc-emoji { font-size: 16px; flex-shrink: 0; line-height: 1; }
+.rc-body { display: flex; flex-direction: column; gap: 1px; min-width: 0; overflow: hidden; }
+.rc-name {
+  font-size: 12px; font-weight: 700; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.rc-text {
+  font-size: 10.5px; color: var(--text-dim);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+/* 이벤트 타입별 테두리 색 */
+.rc-supply_buy  { border-color: rgba(76,198,106,.2); }
+.rc-supply_sell { border-color: rgba(226,101,92,.2); }
+.rc-score_up    { border-color: rgba(100,160,226,.2); }
+.rc-score_dn    { border-color: rgba(180,140,80,.2); }
