@@ -10,7 +10,7 @@ import { pct, profitColor } from '../utils/format'
 import { scene } from '../assets'
 import Miner from './Miner'
 
-const PAGE_SIZE = 2
+const PAGE_SIZE = 4
 const SWIPE_THRESHOLD = 45
 const TAP_SLOP = 8
 
@@ -98,12 +98,15 @@ function MineRow({ stock, market, minW, maxW }) {
 
   return (
     <div className="mine-row">
-      {/* [상] 텍스트 바 — 이름 + 수익률(텍스트로만) + 평가금액 */}
+      {/* [상] 종목명 + 수익률 */}
       <div className="mr-head">
         <span className="mr-name">{stock.name}</span>
         <span className="mr-rate" style={{ color: profitColor(stock.returnRate) }}>
           {up ? '▲' : '▼'} {pct(stock.returnRate)}
         </span>
+      </div>
+      {/* [상+1] 평가금액 (작게, 보조) */}
+      <div className="mr-sub">
         <span className="mr-amount">{compactAmount(market, stock.evalAmount)}</span>
       </div>
 
@@ -163,7 +166,7 @@ export default function MineColumn({ holdings, market, onOpenAll }) {
 
   const safePage = Math.min(page, pageCount - 1)
   const start = safePage * PAGE_SIZE
-  const slots = [0, 1].map((i) => withWeight[start + i] || null)
+  const slots = [0, 1, 2, 3].map((i) => withWeight[start + i] || null)
   const hasPrev = safePage > 0
   const hasNext = safePage < pageCount - 1
   const goPage = (dir) => setPage((p) => Math.min(Math.max(p + dir, 0), pageCount - 1))
