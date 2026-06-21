@@ -390,6 +390,54 @@ def _growth_to_score(cur: int, prev: int) -> float:
     return 50.0 + 40.0 * math.tanh(rate / 0.5)
 
 
+# ── 탐사 공부도구 공개 API ────────────────────────────────────────────────────
+
+def get_company_info(ticker: str) -> dict | None:
+    """DART company.json 회사 기본정보 반환. 실패/키없음 시 None."""
+    if not settings.dart_api_key:
+        return None
+    _load_ticker_map()
+    corp_code = _ticker_map.get(ticker)
+    if not corp_code:
+        return None
+    try:
+        resp = httpx.get(
+            f"{_DART_BASE}/company.json",
+            params={"crtfc_key": settings.dart_api_key, "corp_code": corp_code},
+            timeout=8,
+        )
+        data = resp.json()
+        return data if data.get("status") == "000" else None
+    except Exception as e:
+        logger.debug("company.json %s 실패: %s", ticker, e)
+        return None
+
+
+def get_financials_for_study(ticker: str, num_years: int = 3) -> list[dict]:
+    """DART 재무 3년치 → [{year, revenue, operating_income, total_liabilities, total_equity}].
+
+    탐사 공부도구 전용. 단위는 DART 공시 금액 기준(회사별 상이).
+    """
+    if not settings.dart_api_key:
+        return []
+    _load_ticker_map()
+    corp_code = _ticker_map.get(ticker)
+    if not corp_code:
+        return []
+
+    from datetime import date
+    current_year = date.today().year
+    results: list[dict] = []
+    for offset in range(num_years + 1):  # +1 여유분 (당해 미신고 대비)
+        year = current_year - offset
+        fin = _fetch_financials(corp_code, year_offset=offset)
+        if fin is not None:
+            results.append({"year": str(year), **fin})
+        if len(results) >= num_years:
+            break
+    return results[:num_years]
+
+
 # ── 배당금 추정 ──────────────────────────────────────────────────────────────
 
 def _find_account_by_id(items: list[dict], account_id: str) -> int | None:

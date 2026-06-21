@@ -1329,3 +1329,251 @@ body {
 .rc-supply_sell { border-color: rgba(226,101,92,.2); }
 .rc-score_up    { border-color: rgba(100,160,226,.2); }
 .rc-score_dn    { border-color: rgba(180,140,80,.2); }
+
+/* ═══════════════════════════════════════════════
+   탐사 종목 이해 도구 — StockStudyCard
+   숫자=주인공(금색 크게), bar=보조(얇은 액센트)
+   하드룰: "높다/낮다/좋다/나쁘다" 색 코딩 없음.
+   금색+차콜 중립 팔레트.
+   ═══════════════════════════════════════════════ */
+
+.study-card {
+  margin-bottom: 14px;
+  padding: 14px 14px 10px;
+}
+
+/* 섹션 구분 */
+.study-section {
+  margin-bottom: 14px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(232,179,57,.1);
+}
+.study-section:last-of-type {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.study-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--gold);
+  opacity: .75;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.study-loading-badge {
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--text-dim);
+  opacity: 1;
+}
+
+/* ── 기본 정보 섹션 ── */
+.study-industry {
+  margin-bottom: 10px;
+}
+.si-name {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+.si-note {
+  font-size: 10px;
+  color: var(--text-dim);
+}
+
+.study-basic-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 12px;
+  margin-bottom: 8px;
+}
+.sbg-item {
+  display: flex;
+  gap: 5px;
+  align-items: baseline;
+}
+.sbg-lbl {
+  font-size: 10px;
+  color: var(--text-dim);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.sbg-val {
+  font-size: 12px;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.study-52w {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 4px;
+}
+.s52-lbl {
+  font-size: 10px;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+.s52-range {
+  font-size: 11px;
+  color: var(--text);
+}
+
+/* ── 수치 행 (ssr) ── */
+.ssr {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto auto;
+  gap: 0 10px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.ssr:last-child { margin-bottom: 0; }
+
+.ssr-label {
+  grid-column: 1;
+  grid-row: 1;
+  font-size: 11px;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+.ssr-value {
+  grid-column: 2;
+  grid-row: 1;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--gold);
+  line-height: 1.15;
+  text-align: right;
+}
+.ssr-bar-track {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  height: 3px;
+  background: rgba(232,179,57,.12);
+  border-radius: 2px;
+  margin: 4px 0 2px;
+  overflow: hidden;
+}
+.ssr-bar-fill {
+  height: 100%;
+  background: rgba(232,179,57,.45);
+  border-radius: 2px;
+  transition: width .4s ease;
+}
+.ssr-desc {
+  grid-column: 1 / -1;
+  grid-row: 3;
+  font-size: 10px;
+  color: var(--text-dim);
+  opacity: .7;
+}
+.ssr-na {
+  grid-column: 2;
+  grid-row: 1;
+  font-size: 12px;
+  color: var(--text-dim);
+  text-align: right;
+}
+
+/* ── 추이 bar (TrendBars) ── */
+.study-trend {
+  margin-bottom: 12px;
+}
+.stt-label {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+}
+.stt-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 5px;
+}
+.stt-year {
+  font-size: 10px;
+  color: var(--text-dim);
+  width: 32px;
+  flex-shrink: 0;
+}
+.stt-bar-track {
+  flex: 1;
+  height: 6px;
+  background: rgba(232,179,57,.1);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.stt-bar-fill {
+  height: 100%;
+  background: rgba(232,179,57,.5);
+  border-radius: 3px;
+  transition: width .5s ease;
+}
+.stt-yoy {
+  font-size: 10px;
+  color: var(--text-dim);
+  width: 38px;
+  text-align: right;
+  flex-shrink: 0;
+}
+.stt-na {
+  font-size: 11px;
+  color: var(--text-dim);
+  padding: 4px 0;
+}
+
+.study-trend-note {
+  font-size: 9.5px;
+  color: var(--text-dim);
+  opacity: .6;
+  margin-top: 4px;
+}
+
+/* ── 푸터 ── */
+.study-footer {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(232,179,57,.1);
+}
+.study-neutral-note {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-bottom: 4px;
+}
+.study-disclaimer {
+  font-size: 10px;
+  color: var(--text-dim);
+  opacity: .6;
+}
+
+.study-loading {
+  text-align: center;
+  color: var(--text-dim);
+  padding: 24px 0;
+  font-size: 13px;
+}
+.study-fin-loading {
+  font-size: 11px;
+  color: var(--text-dim);
+  padding: 6px 0;
+}
+.study-na-msg {
+  font-size: 12px;
+  color: var(--text-dim);
+  padding: 8px 0;
+}

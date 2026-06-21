@@ -5,6 +5,7 @@ import { useMarket } from '../store/marketStore'
 import { useScreenData } from '../store/dataStore'
 import { api } from '../api/client'
 import ErrorState from '../components/ErrorState'
+import StockStudyCard from '../components/StockStudyCard'
 
 // 한국어 조사 선택: 받침 있으면 "이", 없으면 "가"
 function particle(name) {
@@ -225,6 +226,11 @@ export default function Explore() {
               보유 종목의 비중을 바꾸거나,<br />새 종목을 더했을 때를 가정해 보세요.
             </p>
           </div>
+        )}
+
+        {/* 종목 이해 도구 — 선택 후 바로 표시 (what-if 위) */}
+        {selected && (
+          <StockStudyCard ticker={selected.ticker} name={selected.name} market={market} />
         )}
 
         {/* ② 비중 슬라이더 — 종목 선택 후 표시 */}

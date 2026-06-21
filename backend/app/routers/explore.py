@@ -1,11 +1,11 @@
-"""탐사(what-if) API — 가상 비중 시뮬레이션.
+"""탐사 API — 종목 이해 도구 (사실 정보) + 가상 비중 시뮬레이션.
 
-하드룰: 종목 추천 없음. 사용자 직접 입력한 종목만 시뮬. disclaimer 항상 포함.
+하드룰: 종목 추천 없음. 사실 정보만. 판단은 사용자 본인. disclaimer 항상 포함.
 """
 from fastapi import APIRouter, Query
 from pydantic import BaseModel, Field
 
-from app.services import explore_service
+from app.services import explore_service, stock_study_service
 
 router = APIRouter(prefix="/api/explore", tags=["explore"])
 
@@ -21,6 +21,24 @@ class SimulateRequest(BaseModel):
 def search(q: str = Query(..., min_length=1), market: str = "KR") -> dict:
     """종목명·코드 검색. 하드룰: 입력 매칭만. 이름+코드만 반환. 추천 없음."""
     return explore_service.search_tickers(q, market)
+
+
+@router.get("/stock")
+def get_stock_overview(
+    ticker: str = Query(..., min_length=1),
+    market: str = "KR",
+) -> dict:
+    """종목 이해 도구 Phase 1 — ka10001 + company.json (즉시). 투자권유 아님."""
+    return stock_study_service.get_stock_overview(ticker, market)
+
+
+@router.get("/stock/financials")
+def get_stock_financials(
+    ticker: str = Query(..., min_length=1),
+    market: str = "KR",
+) -> dict:
+    """종목 이해 도구 Phase 2 — DART 재무 3년 (lazy, 5~15초). 투자권유 아님."""
+    return stock_study_service.get_stock_financials(ticker, market)
 
 
 @router.post("/simulate")

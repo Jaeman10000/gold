@@ -46,6 +46,8 @@ export const api = {
   exploreSimulate: (body) => post('/explore/simulate', body),
   news:            (market) => get(`/news?market=${market}`),
   newsForTicker:   (market, ticker) => get(`/news?market=${market}&ticker=${encodeURIComponent(ticker)}`),
+  exploreStock:    (ticker, market) => get(`/explore/stock?ticker=${encodeURIComponent(ticker)}&market=${market}`),
+  exploreFinancials: (ticker, market) => get(`/explore/stock/financials?ticker=${encodeURIComponent(ticker)}&market=${market}`),
   highlights:      (market) => get(`/highlights?market=${market}`),
   radar:           (market) => get(`/radar?market=${market}`),
   visitStreak:     () => get('/visit/streak'),

@@ -427,6 +427,24 @@ class KiwoomClient(DataProvider):
         logger.info("ka10001 펀더멘털 %d/%d 종목 확보", len(result), len(tickers))
         return result
 
+    def get_stock_info_full(self, ticker: str) -> dict | None:
+        """ka10001 주식기본정보 전체 응답 반환 (탐사 공부도구용).
+
+        per, pbr, roe, eps, bps, sale_amt, bus_pro, for_exh_rt, mac, cur_prc 등 포함.
+        실패 시 None. 점수 계산이 아닌 사실 정보 표시 전용.
+        """
+        try:
+            raw = self._call_api("/api/dostk/stkinfo", "ka10001", {"stk_cd": ticker})
+            data: dict = raw
+            for sub_key in ("output", "data", "output1"):
+                if sub_key in raw and isinstance(raw[sub_key], dict):
+                    data = raw[sub_key]
+                    break
+            return data
+        except Exception as e:
+            logger.debug("get_stock_info_full %s 실패: %s", ticker, e)
+            return None
+
     def get_theme_index(self, market: str) -> dict[str, list[str]]:
         """ka90001(테마그룹) + ka90002(구성종목) → ticker → [테마명, ...].
 
