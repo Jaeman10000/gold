@@ -88,29 +88,27 @@ function MineRow({ stock, market, minW, maxW }) {
   const up = stock.returnRate >= 0
   const weight = stock._weight ?? 0
   const scale = veinScale(weight, minW, maxW)
-  // 밝기(글로우)도 크기와 함께 — 주력 종목이 더 밝음 (단, 모두 금색)
   const norm = maxW > minW ? Math.min(Math.max((weight - minW) / (maxW - minW), 0), 1) : 0.5
-  const glow = (12 + norm * 26).toFixed(0)        // 12~38px
-  const glowA = (0.4 + norm * 0.4).toFixed(2)      // .40~.80
+  const glow = (10 + norm * 22).toFixed(0)
+  const glowA = (0.38 + norm * 0.38).toFixed(2)
   const seed = seedOf(stock.ticker)
-  const minerals = mineralCount(stock.holdingDays)
-  const nuggets = Math.min(3, minerals)
+  const hasDividend = (stock.dividendAmount || 0) > 0
 
   return (
     <div className="mine-row">
-      {/* [상] 종목명 + 수익률 */}
+      {/* [상] 종목명 + 수익률 — 한 세트, 근접 */}
       <div className="mr-head">
         <span className="mr-name">{stock.name}</span>
         <span className="mr-rate" style={{ color: profitColor(stock.returnRate) }}>
           {up ? '▲' : '▼'} {pct(stock.returnRate)}
         </span>
       </div>
-      {/* [상+1] 평가금액 (작게, 보조) */}
+      {/* [상+1] 평가금액 (보조, 작게) */}
       <div className="mr-sub">
         <span className="mr-amount">{compactAmount(market, stock.evalAmount)}</span>
       </div>
 
-      {/* [중] 광맥(비중 비례 크기·밝기) + 일꾼 2명(stagger) */}
+      {/* [중] 광맥 + 일꾼 (보조 — 광물이 주인공) */}
       <div className="mr-mine">
         <VeinSparkles seed={seed} />
         <img
@@ -126,16 +124,17 @@ function MineRow({ stock, market, minW, maxW }) {
         <Miner variant="vright" delayMs={((seed >> 2) % 5) * 90 + 140} />
       </div>
 
-      {/* [하] 누적 광물 ×N + 배당 칩 */}
+      {/* [하] 얻은 수확 — 광물이 주인공 */}
       <div className="mr-foot">
-        <div className="mr-minerals">
-          {Array.from({ length: nuggets }).map((_, i) => (
-            <img key={i} className="mr-nugget" src={scene.gemGold} alt="" aria-hidden="true" />
-          ))}
-          <span className="mr-mineral-count">캔 광물 ×{minerals}</span>
+        <div className="mr-harvest">
+          <span className="mr-harvest-label">얻은 수확</span>
+          <img className="mr-nugget-hero" src={scene.gemGold} alt="" aria-hidden="true" />
         </div>
-        {stock.dividendCount > 0 && (
-          <span className="mr-div-chip">💧 배당 {stock.dividendCount}회</span>
+        {hasDividend && (
+          <div className="mr-div-row">
+            <img className="mr-nugget-sm" src={scene.gemGold} alt="" aria-hidden="true" />
+            <span className="mr-div-amount">{compactAmount(market, stock.dividendAmount)}</span>
+          </div>
         )}
       </div>
     </div>

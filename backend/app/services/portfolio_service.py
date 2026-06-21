@@ -47,10 +47,12 @@ def _enrich_holdings(market: str, holdings: list[dict], provider) -> None:
             for r in db.query(Trade).filter_by(market=market).all()
         ]
 
-        # 종목별 배당 횟수
+        # 종목별 배당 횟수 + 총액
         div_count: dict[str, int] = {}
+        div_amount: dict[str, float] = {}
         for r in db.query(Dividend).filter_by(market=market).all():
             div_count[r.ticker] = div_count.get(r.ticker, 0) + 1
+            div_amount[r.ticker] = div_amount.get(r.ticker, 0.0) + (r.amount or 0)
 
         # 거래기록 없는 종목 폴백 바닥값 = 첫 연동일(앱이 지켜본 시작)
         link_floor = _parse_date(meta_service.get_first_link_date(db) or "")
@@ -77,6 +79,7 @@ def _enrich_holdings(market: str, holdings: list[dict], provider) -> None:
             h["firstBuyDate"] = None
             h["holdingDays"] = None
         h["dividendCount"] = div_count.get(h["ticker"], 0)
+        h["dividendAmount"] = round(div_amount.get(h["ticker"], 0))
 
 
 def _pending_dividend(market: str) -> float:

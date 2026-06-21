@@ -1706,19 +1706,29 @@ body {
   display: grid;
   grid-template-columns: 1fr 1fr;
   grid-template-rows: 1fr 1fr;
-  gap: 8px;
+  gap: 10px;
 }
 
-/* ── 금광 칸 (2×2 그리드, 공유 bg 위 소프트 비네트) ── */
+/* ── 금광 칸 — 테두리 없음, 비네트+여백으로만 구분 (하나의 광산 컨셉) ── */
 .mine-row {
-  position: relative; border-radius: 14px; overflow: hidden;
+  position: relative; overflow: hidden;
   display: flex; flex-direction: column;
-  background: radial-gradient(ellipse at 50% 52%, rgba(247,200,90,.15) 0%, rgba(24,16,7,.18) 50%, rgba(8,6,3,.34) 100%);
-  border: 1px solid rgba(232,179,57,.2);
-  box-shadow: inset 0 0 20px rgba(0,0,0,.32);
+}
+/* 극히 미세한 중앙 글로우 (광맥 기운) */
+.mine-row::before {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 50% 54%, rgba(247,200,90,.07) 0%, transparent 60%);
+  pointer-events: none; z-index: 0;
+}
+/* 바닥 타원 비네트 — 일꾼이 선 땅, 작업장 구분 */
+.mine-row::after {
+  content: ''; position: absolute;
+  bottom: 6%; left: 5%; right: 5%; height: 34%;
+  background: radial-gradient(ellipse at 50% 100%, rgba(0,0,0,.52) 0%, transparent 64%);
+  pointer-events: none; z-index: 0;
 }
 
-/* [상] 종목명 + 수익률 한 줄 */
+/* [상] 종목명 + 수익률 — 한 세트로 읽히게 (flex: 1 제거 → 근접) */
 .mr-head {
   display: flex; align-items: baseline; gap: 5px;
   padding: 7px 9px 0; z-index: 2;
@@ -1726,26 +1736,26 @@ body {
 .mr-name {
   font-size: 12px; font-weight: 800; color: var(--text);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  flex: 1; min-width: 0; text-shadow: 0 1px 4px rgba(0,0,0,.85);
+  flex: 0 1 auto; min-width: 0;  /* flex:1 제거 — 이름이 공간 채우지 않아 수익률과 근접 */
+  text-shadow: 0 1px 4px rgba(0,0,0,.85);
 }
 .mr-rate { font-size: 12px; font-weight: 800; flex-shrink: 0; text-shadow: 0 1px 4px rgba(0,0,0,.85); }
 
-/* [상+1] 평가금액 (작게, 보조) */
+/* [상+1] 평가금액 (보조, 작게) */
 .mr-sub { padding: 1px 9px 0; z-index: 2; }
-.mr-amount { font-size: 10.5px; color: rgba(230,220,200,.62); text-shadow: 0 1px 4px rgba(0,0,0,.85); }
+.mr-amount { font-size: 10.5px; color: rgba(230,220,200,.58); text-shadow: 0 1px 4px rgba(0,0,0,.85); }
 
-/* [중] 광맥 + 일꾼2 (보조, 작게 — 광물이 주인공) */
+/* [중] 광맥 + 일꾼2 (보조) */
 .mr-mine { flex: 1; position: relative; pointer-events: none; min-height: 0; }
 .mr-vein {
-  position: absolute; left: 50%; top: 52%; width: 30%;
-  /* transform·filter 는 컴포넌트 inline (비중 비례 scale·glow) */
+  position: absolute; left: 50%; top: 50%; width: 30%;
 }
 
-/* 칸-스코프 일꾼 (variant vleft/vright) — 작게, 보조 역할 */
-.miner-vleft  { left: 28%; bottom: 10%; width: 18%; height: 40%; }
-.miner-vright { right: 28%; bottom: 10%; width: 18%; height: 40%; }
-.miner-vleft  .miner-rot { transform: rotate(-18deg); }
-.miner-vright .miner-rot { transform: scaleX(-1) rotate(-18deg); }
+/* 칸-스코프 일꾼 — 광맥 바로 옆, 곡괭이가 광맥을 향하도록 위치 */
+.miner-vleft  { left: 20%; bottom: 18%; width: 20%; height: 44%; }
+.miner-vright { right: 20%; bottom: 18%; width: 20%; height: 44%; }
+.miner-vleft  .miner-rot { transform: rotate(-24deg); }
+.miner-vright .miner-rot { transform: scaleX(-1) rotate(-24deg); }
 
 /* 앰비언트 반짝임 (칸마다 시드로 타이밍 다르게) */
 .vein-sparkles { position: absolute; inset: 0; pointer-events: none; }
@@ -1759,28 +1769,29 @@ body {
   45% { opacity: .9; transform: translateY(-10px) scale(1); }
 }
 
-/* [하] 누적 광물 ×N — 주인공(시선 집중점) + 배당 칩 */
+/* [하] 얻은 수확 — 광물 주인공 + 배당금액(있을 시) */
 .mr-foot {
-  display: flex; align-items: center; gap: 6px;
-  padding: 0 9px 7px; z-index: 2;
-  background: linear-gradient(0deg, rgba(8,6,3,.82) 0%, rgba(8,6,3,.3) 70%, transparent 100%);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 9px 8px; z-index: 2;
+  background: linear-gradient(0deg, rgba(8,6,3,.75) 0%, rgba(8,6,3,.2) 75%, transparent 100%);
 }
-.mr-minerals { display: flex; align-items: center; gap: 1px; }
-.mr-nugget {
-  width: 24px; height: 24px; object-fit: contain;
-  filter: drop-shadow(0 0 8px rgba(247,207,90,.8));
-  margin-right: -6px;  /* 겹쳐 더미 느낌 */
+.mr-harvest { display: flex; align-items: center; gap: 5px; }
+.mr-harvest-label {
+  font-size: 9.5px; font-weight: 600; color: rgba(230,210,160,.55);
+  text-shadow: 0 1px 3px rgba(0,0,0,.9); letter-spacing: 0.2px; white-space: nowrap;
 }
-.mr-mineral-count {
-  font-size: 14px; font-weight: 900; color: var(--gold);
-  margin-left: 11px; text-shadow: 0 1px 5px rgba(0,0,0,.95);
-  letter-spacing: 0.3px;
+.mr-nugget-hero {
+  width: 30px; height: 30px; object-fit: contain;
+  filter: drop-shadow(0 0 10px rgba(247,207,90,.95));
 }
-.mr-div-chip {
-  font-size: 10px; font-weight: 600; color: rgba(150,200,235,.92);
-  background: rgba(70,120,160,.18); border: 1px solid rgba(120,180,220,.25);
-  border-radius: 8px; padding: 2px 5px; margin-left: auto; flex-shrink: 0;
-  text-shadow: 0 1px 2px rgba(0,0,0,.7);
+.mr-div-row { display: flex; align-items: center; gap: 4px; }
+.mr-nugget-sm {
+  width: 16px; height: 16px; object-fit: contain;
+  filter: drop-shadow(0 0 5px rgba(247,207,90,.7));
+}
+.mr-div-amount {
+  font-size: 11px; font-weight: 700; color: rgba(155,205,245,.9);
+  text-shadow: 0 1px 3px rgba(0,0,0,.9); white-space: nowrap;
 }
 
 /* 빈 칸 — '미개발 광구' */
