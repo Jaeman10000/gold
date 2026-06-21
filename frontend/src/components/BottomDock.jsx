@@ -1,10 +1,10 @@
-// 하단 독 — 5칸 (CLAUDE.md §7). 연구소(v2)는 보유종목 '뉴스'로 교체.
+// 하단 독 — 5칸 (CLAUDE.md §7). '소식' = 광맥 레이더(수급·점수) + 보유종목 뉴스 통합.
 const ITEMS = [
   { key: 'mine',    label: '광산',  icon: '⛏️' },
   { key: 'vault',   label: '금고',  icon: '🏰' },
   { key: 'survey',  label: '측량소', icon: '📐' },
   { key: 'explore', label: '탐사',  icon: '🧭' },
-  { key: 'news',    label: '뉴스',  icon: '📰' },
+  { key: 'news',    label: '소식',  icon: '📡' },
 ]
 
 export default function BottomDock({ active, onChange }) {

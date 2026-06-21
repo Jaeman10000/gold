@@ -1,31 +1,27 @@
-// 광산(홈) — 풀블리드 금광 씬 + 그 위 오버레이(HUD/수익률/칩/디스클레이머). CLAUDE.md §7.
+// 광산(홈) — 풀블리드 금광 씬 + 종목별 금광 캐러셀. CLAUDE.md §5·§7.
+// 컨셉: "내가 일할 때도 내 돈이 금을 캐고 있다." 씬이 주인공.
+// 종목 하나 = 금광 하나(스와이프 전환). 레이더·뉴스는 소식 탭으로 이동.
 import { useState, useEffect } from 'react'
 import { useScreenData, useDataStore } from '../store/dataStore'
 import { useMarket } from '../store/marketStore'
 import { api } from '../api/client'
 import MineScene from '../components/MineScene'
 import Hud from '../components/Hud'
-import ReturnPanel from '../components/ReturnPanel'
-import HoldingChips from '../components/HoldingChips'
+import AssetSummary from '../components/AssetSummary'
+import StockMineStage from '../components/StockMineStage'
 import HoldingsSheet from '../components/HoldingsSheet'
 import LockedOverlay from '../components/LockedOverlay'
 import LoadingMascot from '../components/LoadingMascot'
 import RestoreReveal from '../components/RestoreReveal'
 import ErrorState from '../components/ErrorState'
-import RadarPanel from '../components/RadarPanel'
-import RadarDetailSheet from '../components/RadarDetailSheet'
-import NewsStrip from '../components/NewsStrip'
-import NewsItemSheet from '../components/NewsItemSheet'
-import { goldDisplay, timeAgo } from '../utils/format'
+import { goldDisplay } from '../utils/format'
 
 export default function MineHome() {
   const { market } = useMarket()
   const { data, loading, refreshing, error, cachedAt } = useScreenData('portfolio', market)
   const { refresh, levelData } = useDataStore()   // 전역 — 탭 전환 후에도 유지
   const [sheetOpen, setSheetOpen] = useState(false)
-  const [radarEvent, setRadarEvent] = useState(null)
-  const [newsItem, setNewsItem] = useState(null)
-  const [highlights, setHighlights] = useState(null)  // [B] 수급 + [C] 업적 한 줄
+  const [highlights, setHighlights] = useState(null)   // [C] 업적 한 줄
   const [visitStreak, setVisitStreak] = useState(null) // 연속 방문일
 
   useEffect(() => {
@@ -40,10 +36,11 @@ export default function MineHome() {
 
   const locked = data?.status === 'locked'
   const goldStr = data ? goldDisplay(data.market, data.goldAmount || 0) : ''
+  const streakMsg = visitStreak?.message || highlights?.achievement
 
   return (
     <div className="screen mine-home">
-      {/* z0: 풀블리드 씬 */}
+      {/* z0: 풀블리드 씬 (공용 금더미·광맥·일꾼 — 총자산 상징, 고정) */}
       <MineScene
         goldAmount={locked ? 0 : data?.goldAmount || 0}
         market={data?.market || 'KR'}
@@ -65,24 +62,39 @@ export default function MineHome() {
 
       {!loading && !locked && data && (
         <>
-          {/* 헤더 패널 + 수익률 알약 + 종목 칩 (세로 스택) */}
+          {/* 상단 오버레이: 압축 HUD + 자산 요약 한 줄 */}
           <div className="home-overlay">
-            <Hud data={data} goldOverride={goldStr} refreshing={refreshing} levelData={levelData} achievement={visitStreak?.message || highlights?.achievement} onSync={() => refresh(market)} cachedAt={cachedAt} />
-            <div className="home-pill-chips">
-              <ReturnPanel data={data} onExpand={() => setSheetOpen(true)} />
-              <NewsStrip market={market} onSelect={setNewsItem} />
-              <HoldingChips
-                holdings={data.holdings}
-                onExpand={() => setSheetOpen(true)}
-              />
-              {/* 광맥 레이더 — 이벤트 있을 때만 표시. onSelect → top-level sheet */}
-              <RadarPanel market={market} onSelect={setRadarEvent} />
-            </div>
+            <Hud
+              data={data}
+              refreshing={refreshing}
+              levelData={levelData}
+              onSync={() => refresh(market)}
+              cachedAt={cachedAt}
+            />
+            <AssetSummary
+              data={data}
+              goldOverride={goldStr}
+              onExpand={() => setSheetOpen(true)}
+            />
           </div>
-          {cachedAt && (
-            <div className="last-updated">↻ {timeAgo(cachedAt)} 업데이트</div>
+
+          {/* 중앙 무대: 종목별 금광 캐러셀 (씬 위, 스와이프) */}
+          {data.holdings?.length > 0 && (
+            <StockMineStage
+              holdings={data.holdings}
+              market={data.market}
+              onOpenAll={() => setSheetOpen(true)}
+            />
           )}
-          <div className="home-disclaimer">{data.disclaimer}</div>
+
+          {/* 하단: 연속방문 한 줄 + disclaimer */}
+          <div className="home-bottom">
+            {streakMsg && (
+              <div className="home-streak"><span className="ach-icon">🔥</span>{streakMsg}</div>
+            )}
+            <div className="home-disclaimer">{data.disclaimer}</div>
+          </div>
+
           <HoldingsSheet
             open={sheetOpen}
             onClose={() => setSheetOpen(false)}
@@ -90,17 +102,6 @@ export default function MineHome() {
             market={data.market}
           />
         </>
-      )}
-
-      {newsItem && (
-        <NewsItemSheet item={newsItem} onClose={() => setNewsItem(null)} />
-      )}
-
-      {radarEvent && (
-        <RadarDetailSheet
-          event={radarEvent}
-          onClose={() => setRadarEvent(null)}
-        />
       )}
     </div>
   )

@@ -1,17 +1,12 @@
-// 홈 헤더 패널 — 3단 구조 (CLAUDE.md §5 HUD).
-// 1단: 레벨 배지(결정 컨셉) + 아이콘 / EXP 채굴 게이지
+// 홈 헤더 패널 — 압축 2~3단 (CLAUDE.md §5 HUD).
+// 1단: 레벨 배지 + EXP 채굴 게이지 + 아이콘 (한 줄)
 // 2단: 등급칩 · 시장토글 · 성향칩
-// 3단: 총 평가금액
+// (총 평가금액·수익률은 AssetSummary로, 연속방문은 하단으로 분리 — 씬이 주인공)
 import MarketToggle from './MarketToggle'
 import { syncTime } from '../utils/format'
 
-export default function Hud({ data, goldOverride, refreshing, levelData, achievement, onSync, cachedAt }) {
+export default function Hud({ data, refreshing, levelData, onSync, cachedAt }) {
   const { veinGrade, disposition } = data
-  const goldText = goldOverride || data.goldAmountDisplay
-
-  const symMatch = String(goldText || '').match(/^([₩$])(.+)$/)
-  const goldSym = symMatch ? symMatch[1] : ''
-  const goldNum = symMatch ? symMatch[2] : (goldText || '')
 
   // 레벨 데이터 (없으면 기본값)
   const level    = levelData?.level      ?? 1
@@ -28,20 +23,25 @@ export default function Hud({ data, goldOverride, refreshing, levelData, achieve
   const expLeft  = Math.max(0, needExp - curExp)
 
   return (
-    <div className="home-header-panel">
+    <div className="home-header-panel compact">
 
-      {/* 1단: 레벨 배지 + 아이콘 */}
+      {/* 1단: 레벨 배지 + EXP 게이지(인라인) + 아이콘 */}
       <div className="h-row1">
-        <div className="lv-badge-wrap">
-          <div className="lv-badge" style={{ boxShadow: badgeShadow }}>
-            <span className="lv-label">LV</span>
-            <span className="lv-num">{level}</span>
+        <div className="lv-badge" style={{ boxShadow: badgeShadow }}>
+          <span className="lv-label">LV</span>
+          <span className="lv-num">{level}</span>
+        </div>
+
+        <div className="exp-gauge-inline">
+          <div className="exp-bar-track" aria-label={`EXP ${pct}%`}>
+            <div className="exp-bar-fill" style={{ width: `${pct}%` }} />
           </div>
-          <div className="lv-badge-info">
-            <span className="lv-badge-title">광부 레벨</span>
-            <span className="lv-badge-sub">꾸준히 굴린 기록</span>
+          <div className="exp-info">
+            <span className="exp-cur">Lv{level} · {curExp.toLocaleString()}/{needExp.toLocaleString()} EXP</span>
+            <span className="exp-next">{isMax ? '만렙 ✦' : `다음까지 ${expLeft.toLocaleString()}`}</span>
           </div>
         </div>
+
         <div className="h-icons">
           <button
             className="sync-btn"
@@ -58,38 +58,11 @@ export default function Hud({ data, goldOverride, refreshing, levelData, achieve
         </div>
       </div>
 
-      {/* EXP 채굴 게이지 */}
-      <div className="exp-gauge-wrap">
-        <div className="exp-bar-track" aria-label={`EXP ${pct}%`}>
-          <div className="exp-bar-fill" style={{ width: `${pct}%` }} />
-        </div>
-        <div className="exp-info">
-          <span className="exp-cur">{curExp.toLocaleString()} / {needExp.toLocaleString()} EXP</span>
-          <span className="exp-next">
-            {isMax ? '만렙 달성 ✦' : `다음 레벨까지 ${expLeft.toLocaleString()}`}
-          </span>
-        </div>
-      </div>
-
-      {/* [C] 연속투자일·업적 한 줄 */}
-      {achievement && (
-        <div className="achievement-line"><span className="ach-icon">🔥</span>{achievement}</div>
-      )}
-
       {/* 2단: 등급칩 · 시장토글 · 성향칩 */}
       <div className="h-row2">
         <span className="h-chip grade">{veinGrade.label} · {veinGrade.score}</span>
         <MarketToggle />
         <span className="h-chip disp">성향 · {disposition}</span>
-      </div>
-
-      {/* 3단: 총 평가금액 (중앙) */}
-      <div className="h-row3">
-        <div className="h-amount-label">총 평가금액</div>
-        <div className="h-amount-main">
-          <span className="h-amount-symbol">{goldSym}</span>
-          <span className="h-amount-num">{goldNum}</span>
-        </div>
       </div>
 
     </div>

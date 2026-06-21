@@ -1599,3 +1599,152 @@ body {
   line-height: 1.5;
   margin-bottom: 6px;
 }
+
+/* ═══════════════════════════════════════════════
+   홈 재설계 (2026-06-21) — 종목별 금광 캐러셀
+   "내가 일할 때도 내 돈이 금을 캐고 있다"
+   씬이 주인공 → HUD 압축 + 자산 한 줄 + 중앙 무대
+   ═══════════════════════════════════════════════ */
+
+/* ── 압축 HUD: 1단 = 배지 + EXP게이지(인라인) + 아이콘 ── */
+.home-header-panel.compact { gap: 9px; padding-bottom: 8px; }
+.home-header-panel.compact .h-row1 {
+  display: flex; align-items: center; gap: 11px; justify-content: flex-start;
+}
+.exp-gauge-inline {
+  flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px;
+}
+.exp-gauge-inline .exp-info { gap: 8px; }
+.exp-gauge-inline .exp-cur,
+.exp-gauge-inline .exp-next {
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.home-header-panel.compact .h-icons { flex-shrink: 0; }
+
+/* ── 자산 요약 한 줄 (HUD 아래, 씬 위) ── */
+.asset-summary {
+  align-self: center;
+  display: inline-flex; align-items: center; gap: 12px;
+  margin: 2px auto 0;
+  padding: 8px 18px; border-radius: 999px;
+  background: rgba(12,8,4,.72); backdrop-filter: blur(8px);
+  border: 1px solid rgba(232,179,57,.22);
+  cursor: pointer; white-space: nowrap; max-width: 92%;
+}
+.as-amount {
+  font-size: 22px; font-weight: 900; color: var(--gold);
+  letter-spacing: -.5px;
+  text-shadow: 0 0 14px rgba(247,207,90,.3);
+}
+.as-sep { width: 1px; height: 18px; background: rgba(232,179,57,.25); }
+.as-return { display: inline-flex; align-items: baseline; gap: 6px; font-size: 14px; font-weight: 800; }
+.as-arrow { font-size: 12px; }
+.as-profit { font-size: 12px; font-weight: 600; opacity: .85; }
+
+/* ── 중앙 무대: 종목별 금광 캐러셀 ── */
+.stock-stage {
+  position: absolute; left: 0; right: 0;
+  top: 30%; bottom: 15%;
+  z-index: 4;
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: space-between;
+  pointer-events: auto;
+  touch-action: pan-y;       /* 가로 스와이프는 우리가 처리 */
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* 종목 라벨 (무대 상단) */
+.ss-label {
+  text-align: center; pointer-events: none;
+  animation: ssLabelIn .28s ease-out;
+}
+.ss-name {
+  font-size: 19px; font-weight: 800; color: var(--text);
+  text-shadow: 0 2px 8px rgba(0,0,0,.8); line-height: 1.1;
+}
+.ss-rate {
+  font-size: 16px; font-weight: 800; margin-top: 3px;
+  text-shadow: 0 2px 6px rgba(0,0,0,.7);
+}
+.ss-amount {
+  font-size: 12px; color: rgba(230,220,200,.78); margin-top: 2px;
+  text-shadow: 0 1px 4px rgba(0,0,0,.7);
+}
+@keyframes ssLabelIn {
+  0% { opacity: 0; transform: translateY(-6px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* 광물 (무대 중앙, 광맥 위) */
+.ss-gem-zone {
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  pointer-events: none; width: 100%;
+}
+.ss-gem {
+  width: 96px; height: 96px; object-fit: contain;
+  filter: drop-shadow(0 0 18px rgba(247,207,90,.55)) drop-shadow(0 6px 10px rgba(0,0,0,.5));
+  animation: ssGemIn .34s cubic-bezier(.34,1.4,.5,1);
+}
+@keyframes ssGemIn {
+  0% { opacity: 0; transform: scale(.6) translateY(8px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* 양쪽 "더 있음" 화살표 */
+.ss-edge {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  width: 38px; height: 64px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 34px; font-weight: 300; line-height: 1;
+  color: var(--gold-bright);
+  background: none; border: none; cursor: pointer;
+  text-shadow: 0 0 10px rgba(0,0,0,.9);
+  transition: opacity .2s;
+}
+.ss-edge-left  { left: 4px; }
+.ss-edge-right { right: 4px; }
+.ss-edge.off { opacity: .12; }
+.ss-edge:active:not(.off) { transform: translateY(-50%) scale(.85); }
+
+/* 위치 인디케이터 (점 + N/M) */
+.ss-indicator {
+  display: flex; flex-direction: column; align-items: center; gap: 5px;
+  pointer-events: none;
+}
+.ss-dots { display: flex; gap: 6px; }
+.ss-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: rgba(232,179,57,.3);
+  transition: background .2s, transform .2s;
+}
+.ss-dot.on { background: var(--gold-bright); transform: scale(1.35); }
+.ss-count {
+  font-size: 11px; font-weight: 700; color: rgba(247,207,90,.85);
+  text-shadow: 0 1px 4px rgba(0,0,0,.8);
+}
+
+/* ── 하단: 연속방문 + disclaimer ── */
+.home-bottom {
+  position: absolute; left: 0; right: 0; bottom: 64px; z-index: 6;
+  display: flex; flex-direction: column; align-items: center; gap: 5px;
+  padding: 10px 16px 8px;
+  background: linear-gradient(0deg, rgba(12,8,4,.9) 0%, rgba(12,8,4,.5) 65%, rgba(12,8,4,0) 100%);
+  pointer-events: none;
+}
+.home-streak {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12px; color: rgba(230,220,200,.9);
+  text-align: center; line-height: 1.3;
+}
+.home-streak .ach-icon { font-size: 13px; }
+.home-bottom .home-disclaimer {
+  position: static; font-size: 10px; color: var(--text-dim);
+  text-align: center; opacity: .75; margin: 0;
+}
+
+/* ── 소식 탭: 섹션 타이틀 ── */
+.feed-section-title {
+  font-size: 13px; font-weight: 700; color: var(--gold);
+  margin: 14px 0 8px; padding: 0 2px;
+}
