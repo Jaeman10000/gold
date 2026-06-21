@@ -1,13 +1,12 @@
 // 광맥 레이더 — 보유 종목 기준 이벤트 카드 패널.
 // 이벤트 없으면 null 반환(패널 숨김). CLAUDE.md §12: 매수/매도 권유 표현 0개.
+// selected 상태는 MineHome에서 관리 → Bottom Sheet가 home-overlay 바깥에서 렌더링됨.
 import { useState, useEffect } from 'react'
 import { api } from '../api/client'
-import RadarDetailSheet from './RadarDetailSheet'
 
-export default function RadarPanel({ market }) {
-  const [events, setEvents]   = useState([])
-  const [selected, setSelected] = useState(null)
-  const [loaded, setLoaded]   = useState(false)
+export default function RadarPanel({ market, onSelect }) {
+  const [events, setEvents] = useState([])
+  const [loaded, setLoaded] = useState(false)
 
   useEffect(() => {
     setLoaded(false)
@@ -17,7 +16,6 @@ export default function RadarPanel({ market }) {
       .finally(() => setLoaded(true))
   }, [market])
 
-  // 이벤트 없거나 아직 로딩 중 → 패널 숨김
   if (!loaded || events.length === 0) return null
 
   return (
@@ -31,7 +29,7 @@ export default function RadarPanel({ market }) {
           <button
             key={i}
             className={`radar-card rc-${ev.type}`}
-            onClick={() => setSelected(ev)}
+            onClick={() => onSelect(ev)}
           >
             <span className="rc-emoji">{ev.emoji}</span>
             <div className="rc-body">
@@ -41,13 +39,6 @@ export default function RadarPanel({ market }) {
           </button>
         ))}
       </div>
-
-      {selected && (
-        <RadarDetailSheet
-          event={selected}
-          onClose={() => setSelected(null)}
-        />
-      )}
     </div>
   )
 }

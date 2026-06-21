@@ -14,6 +14,7 @@ import RestoreReveal from '../components/RestoreReveal'
 import ErrorState from '../components/ErrorState'
 import SupplyDetailSheet from '../components/SupplyDetailSheet'
 import RadarPanel from '../components/RadarPanel'
+import RadarDetailSheet from '../components/RadarDetailSheet'
 import { goldDisplay, timeAgo } from '../utils/format'
 
 export default function MineHome() {
@@ -22,6 +23,7 @@ export default function MineHome() {
   const { refresh, levelData } = useDataStore()   // 전역 — 탭 전환 후에도 유지
   const [sheetOpen, setSheetOpen] = useState(false)
   const [supplySheetOpen, setSupplySheetOpen] = useState(false)
+  const [radarEvent, setRadarEvent] = useState(null)
   const [highlights, setHighlights] = useState(null)  // [B] 수급 + [C] 업적 한 줄
   const [visitStreak, setVisitStreak] = useState(null) // 연속 방문일
 
@@ -76,8 +78,8 @@ export default function MineHome() {
                 holdings={data.holdings}
                 onExpand={() => setSheetOpen(true)}
               />
-              {/* 광맥 레이더 — 이벤트 있을 때만 표시 */}
-              <RadarPanel market={market} />
+              {/* 광맥 레이더 — 이벤트 있을 때만 표시. onSelect → top-level sheet */}
+              <RadarPanel market={market} onSelect={setRadarEvent} />
             </div>
           </div>
           {cachedAt && (
@@ -97,6 +99,13 @@ export default function MineHome() {
         <SupplyDetailSheet
           supply={highlights.supply}
           onClose={() => setSupplySheetOpen(false)}
+        />
+      )}
+
+      {radarEvent && (
+        <RadarDetailSheet
+          event={radarEvent}
+          onClose={() => setRadarEvent(null)}
         />
       )}
     </div>

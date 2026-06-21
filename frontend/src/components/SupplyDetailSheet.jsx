@@ -15,6 +15,12 @@ export default function SupplyDetailSheet({ supply, onClose }) {
   const [news, setNews] = useState([])
   const [loading, setLoading] = useState(true)
 
+  // 시트 열리는 동안 배경 스크롤 잠금
+  useEffect(() => {
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = '' }
+  }, [])
+
   useEffect(() => {
     if (!supply?.ticker) { setLoading(false); return }
     api.newsForTicker('KR', supply.ticker)

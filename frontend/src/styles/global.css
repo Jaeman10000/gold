@@ -378,7 +378,7 @@ body {
 .sds-val.dn { color: var(--loss); }
 .sds-note { font-size: 0.72rem; color: var(--text-dim); margin-bottom: 16px; }
 .sds-news-loading { font-size: 0.82rem; color: var(--text-dim); text-align: center; padding: 12px 0; }
-.sds-news { display: flex; flex-direction: column; gap: 8px; }
+.sds-news { display: flex; flex-direction: column; gap: 8px; overflow-y: auto; flex: 1; min-height: 0; }
 .sds-news-header { font-size: 0.82rem; font-weight: 700; color: var(--text-dim); margin-bottom: 2px; }
 .sds-news-item { display: block; text-decoration: none; background: rgba(255,255,255,.04); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
 .sds-news-item:active { background: rgba(232,179,57,.07); }
@@ -1257,6 +1257,8 @@ body {
   text-align: left;
   transition: background .15s, border-color .15s;
   min-width: 0;
+  height: 52px;  /* 클릭해도 그리드 크기 고정 */
+  box-sizing: border-box;
 }
 .radar-card:hover { background: rgba(232,179,57,.09); border-color: rgba(232,179,57,.3); }
 .radar-card:active { transform: scale(.97); }
