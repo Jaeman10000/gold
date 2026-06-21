@@ -8,7 +8,7 @@ import { api } from '../api/client'
 import MineScene from '../components/MineScene'
 import Hud from '../components/Hud'
 import AssetSummary from '../components/AssetSummary'
-import StockMineStage from '../components/StockMineStage'
+import MineGrid from '../components/MineGrid'
 import HoldingsSheet from '../components/HoldingsSheet'
 import LockedOverlay from '../components/LockedOverlay'
 import LoadingMascot from '../components/LoadingMascot'
@@ -40,12 +40,8 @@ export default function MineHome() {
 
   return (
     <div className="screen mine-home">
-      {/* z0: 풀블리드 씬 (공용 금더미·광맥·일꾼 — 총자산 상징, 고정) */}
-      <MineScene
-        goldAmount={locked ? 0 : data?.goldAmount || 0}
-        market={data?.market || 'KR'}
-        dimmed={locked}
-      />
+      {/* z0: 풀블리드 씬 배경 (부감 뷰 — 동굴 벽/바닥) */}
+      <MineScene dimmed={locked} />
 
       {loading && !data && (
         <LoadingMascot text="시장 데이터를 불러오는 중…" />
@@ -74,13 +70,14 @@ export default function MineHome() {
             <AssetSummary
               data={data}
               goldOverride={goldStr}
+              goldAmount={data.goldAmount || 0}
               onExpand={() => setSheetOpen(true)}
             />
           </div>
 
-          {/* 중앙 무대: 종목별 금광 캐러셀 (씬 위, 스와이프) */}
+          {/* 중앙: 2×2 금광 그리드 (부감 뷰 주인공, 페이지 스와이프) */}
           {data.holdings?.length > 0 && (
-            <StockMineStage
+            <MineGrid
               holdings={data.holdings}
               market={data.market}
               onOpenAll={() => setSheetOpen(true)}

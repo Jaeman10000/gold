@@ -1641,89 +1641,6 @@ body {
 .as-arrow { font-size: 12px; }
 .as-profit { font-size: 12px; font-weight: 600; opacity: .85; }
 
-/* ── 중앙 무대: 종목별 금광 캐러셀 ── */
-.stock-stage {
-  position: absolute; left: 0; right: 0;
-  top: 30%; bottom: 15%;
-  z-index: 4;
-  display: flex; flex-direction: column; align-items: center;
-  justify-content: space-between;
-  pointer-events: auto;
-  touch-action: pan-y;       /* 가로 스와이프는 우리가 처리 */
-  user-select: none;
-  -webkit-user-select: none;
-}
-
-/* 종목 라벨 (무대 상단) */
-.ss-label {
-  text-align: center; pointer-events: none;
-  animation: ssLabelIn .28s ease-out;
-}
-.ss-name {
-  font-size: 19px; font-weight: 800; color: var(--text);
-  text-shadow: 0 2px 8px rgba(0,0,0,.8); line-height: 1.1;
-}
-.ss-rate {
-  font-size: 16px; font-weight: 800; margin-top: 3px;
-  text-shadow: 0 2px 6px rgba(0,0,0,.7);
-}
-.ss-amount {
-  font-size: 12px; color: rgba(230,220,200,.78); margin-top: 2px;
-  text-shadow: 0 1px 4px rgba(0,0,0,.7);
-}
-@keyframes ssLabelIn {
-  0% { opacity: 0; transform: translateY(-6px); }
-  100% { opacity: 1; transform: translateY(0); }
-}
-
-/* 광물 (무대 중앙, 광맥 위) */
-.ss-gem-zone {
-  flex: 1; display: flex; align-items: center; justify-content: center;
-  pointer-events: none; width: 100%;
-}
-.ss-gem {
-  width: 96px; height: 96px; object-fit: contain;
-  filter: drop-shadow(0 0 18px rgba(247,207,90,.55)) drop-shadow(0 6px 10px rgba(0,0,0,.5));
-  animation: ssGemIn .34s cubic-bezier(.34,1.4,.5,1);
-}
-@keyframes ssGemIn {
-  0% { opacity: 0; transform: scale(.6) translateY(8px); }
-  100% { opacity: 1; transform: scale(1) translateY(0); }
-}
-
-/* 양쪽 "더 있음" 화살표 */
-.ss-edge {
-  position: absolute; top: 50%; transform: translateY(-50%);
-  width: 38px; height: 64px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 34px; font-weight: 300; line-height: 1;
-  color: var(--gold-bright);
-  background: none; border: none; cursor: pointer;
-  text-shadow: 0 0 10px rgba(0,0,0,.9);
-  transition: opacity .2s;
-}
-.ss-edge-left  { left: 4px; }
-.ss-edge-right { right: 4px; }
-.ss-edge.off { opacity: .12; }
-.ss-edge:active:not(.off) { transform: translateY(-50%) scale(.85); }
-
-/* 위치 인디케이터 (점 + N/M) */
-.ss-indicator {
-  display: flex; flex-direction: column; align-items: center; gap: 5px;
-  pointer-events: none;
-}
-.ss-dots { display: flex; gap: 6px; }
-.ss-dot {
-  width: 6px; height: 6px; border-radius: 50%;
-  background: rgba(232,179,57,.3);
-  transition: background .2s, transform .2s;
-}
-.ss-dot.on { background: var(--gold-bright); transform: scale(1.35); }
-.ss-count {
-  font-size: 11px; font-weight: 700; color: rgba(247,207,90,.85);
-  text-shadow: 0 1px 4px rgba(0,0,0,.8);
-}
-
 /* ── 하단: 연속방문 + disclaimer ── */
 .home-bottom {
   position: absolute; left: 0; right: 0; bottom: 64px; z-index: 6;
@@ -1747,4 +1664,155 @@ body {
 .feed-section-title {
   font-size: 13px; font-weight: 700; color: var(--gold);
   margin: 14px 0 8px; padding: 0 2px;
+}
+
+/* ═══════════════════════════════════════════════
+   홈 재설계 v2 (2026-06-21) — 2×2 금광 그리드
+   "내 광산을 내려다보는 뷰" — 종목들이 각자 동시에 채굴.
+   공유 bg + 소프트 비네트 칸 / 금더미는 자산요약 옆으로.
+   ═══════════════════════════════════════════════ */
+
+/* 씬 앰비언트 — 그리드를 받쳐주는 은은한 글로우 */
+.scene-ambient {
+  position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(ellipse at 50% 44%, rgba(247,200,90,.12) 0%, rgba(247,200,90,.04) 38%, transparent 64%);
+}
+
+/* 자산요약 옆 작은 금더미 (총자산 상징, 3단계) */
+.as-pile {
+  width: 28px; height: 28px; object-fit: contain;
+  filter: drop-shadow(0 2px 5px rgba(0,0,0,.55));
+  flex-shrink: 0;
+}
+
+/* ── 그리드 래퍼 (페이지 스와이프) ── */
+.mine-grid-wrap {
+  position: absolute; left: 0; right: 0;
+  top: 19%; bottom: 13%;
+  z-index: 4;
+  display: flex; flex-direction: column; gap: 8px;
+  padding: 0 12px;
+  pointer-events: auto; touch-action: pan-y;
+  user-select: none; -webkit-user-select: none;
+}
+.mine-grid {
+  flex: 1; min-height: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 11px;
+}
+
+/* ── 금광 칸 (공유 bg 위 소프트 비네트) ── */
+.mine-cell {
+  position: relative; border-radius: 16px; overflow: hidden;
+  display: flex; flex-direction: column;
+  background: radial-gradient(ellipse at 50% 36%, rgba(247,200,90,.16) 0%, rgba(24,16,7,.2) 52%, rgba(8,6,3,.36) 100%);
+  border: 1px solid rgba(232,179,57,.2);
+  box-shadow: inset 0 0 24px rgba(0,0,0,.34);
+}
+/* 손실 종목 — 글로우 약화 + 차갑게 (빨강 텍스트 외 색 중립) */
+.mine-cell.loss {
+  background: radial-gradient(ellipse at 50% 36%, rgba(130,140,160,.1) 0%, rgba(16,14,12,.3) 58%, rgba(6,6,8,.4) 100%);
+  border-color: rgba(150,160,180,.15);
+}
+
+/* [상] 캔 광물 — 칸 시선 집중점 */
+.mc-gem-zone {
+  flex: 0 0 40%; display: flex; align-items: center; justify-content: center;
+  pointer-events: none; padding-top: 6px;
+}
+.mc-gem {
+  width: 54px; height: 54px; object-fit: contain;
+  filter: drop-shadow(0 0 13px rgba(247,207,90,.6)) drop-shadow(0 4px 7px rgba(0,0,0,.5));
+  animation: mcGemIn .3s cubic-bezier(.34,1.4,.5,1);
+}
+.mine-cell.loss .mc-gem {
+  filter: drop-shadow(0 0 5px rgba(150,160,180,.28)) drop-shadow(0 4px 7px rgba(0,0,0,.5));
+  opacity: .82;
+}
+@keyframes mcGemIn {
+  0% { opacity: 0; transform: scale(.6) translateY(6px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* [중] 광석 + 일꾼1 */
+.mc-mine { flex: 1; position: relative; pointer-events: none; }
+.mc-ore {
+  position: absolute; left: 39%; bottom: 24%; width: 40%;
+  transform: translateX(-50%);
+  filter: drop-shadow(0 0 8px rgba(255,210,90,.5));
+}
+.mine-cell.loss .mc-ore { filter: grayscale(.55) brightness(.68); }
+
+/* 칸-스코프 일꾼 (Miner variant="cell") — mc-mine 기준 배치 */
+.miner-cell { left: 63%; bottom: 20%; width: 42%; height: 52%; }
+.miner-cell .miner-rot { transform: rotate(-16deg); }
+
+/* [하] 텍스트 오버레이 */
+.mc-overlay {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  padding: 16px 9px 8px;
+  background: linear-gradient(0deg, rgba(8,6,3,.88) 0%, rgba(8,6,3,.5) 58%, transparent 100%);
+  pointer-events: none;
+}
+.mc-line1 { display: flex; align-items: baseline; justify-content: space-between; gap: 5px; }
+.mc-name {
+  font-size: 12.5px; font-weight: 700; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  flex: 1; min-width: 0; text-shadow: 0 1px 3px rgba(0,0,0,.85);
+}
+.mc-rate {
+  font-size: 12px; font-weight: 800; flex-shrink: 0;
+  text-shadow: 0 1px 3px rgba(0,0,0,.85);
+}
+.mc-amount {
+  font-size: 10.5px; color: rgba(230,220,200,.72); margin-top: 1px;
+  text-shadow: 0 1px 3px rgba(0,0,0,.85);
+}
+
+/* 빈 칸 — '미개발 광구' */
+.mine-cell.empty {
+  display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 9px;
+  background: rgba(10,8,5,.26);
+  border: 1px dashed rgba(232,179,57,.14);
+  box-shadow: none;
+}
+.mc-empty-ore {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(120,100,60,.22), rgba(60,50,30,.1));
+  border: 1px dashed rgba(200,180,120,.18);
+}
+.mc-empty-label {
+  font-size: 11px; color: rgba(200,190,170,.4); letter-spacing: 1px;
+}
+
+/* ── 페이지 화살표 (4060 UX: 명시적) ── */
+.mg-edge {
+  position: absolute; top: 44%; transform: translateY(-50%);
+  width: 30px; height: 58px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 30px; font-weight: 300; line-height: 1;
+  color: var(--gold-bright); background: none; border: none; cursor: pointer;
+  text-shadow: 0 0 10px rgba(0,0,0,.95); z-index: 3;
+}
+.mg-edge-left  { left: -2px; }
+.mg-edge-right { right: -2px; }
+.mg-edge.off { opacity: .12; }
+.mg-edge:active:not(.off) { transform: translateY(-50%) scale(.85); }
+
+/* 페이지 인디케이터 (점 + N/M) */
+.mg-indicator {
+  flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 3px;
+  pointer-events: none;
+}
+.mg-dots { display: flex; gap: 6px; }
+.mg-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: rgba(232,179,57,.3); transition: background .2s, transform .2s;
+}
+.mg-dot.on { background: var(--gold-bright); transform: scale(1.35); }
+.mg-count {
+  font-size: 11px; font-weight: 700; color: rgba(247,207,90,.85);
+  text-shadow: 0 1px 4px rgba(0,0,0,.8);
 }
