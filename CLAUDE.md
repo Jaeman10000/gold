@@ -299,14 +299,16 @@
   - `GET /api/visit/streak` — `VisitLog` 테이블, 연속 방문일 계산, 문구 반환. HUD 경험치 바 아래에 표시(achievement 자리 대체).
   - `RadarPanel.jsx`(2열 그리드, 이벤트 없으면 숨김) + `RadarDetailSheet.jsx`(수급: 외인·기관 수치+뉴스 / 점수: 전일비).
 - ✅ **CORS Quick Tunnel 버그 수정 (2026-06-20)** — `allow_origin_regex=r"https://.*\.trycloudflare\.com"` 추가. Quick Tunnel URL이 재시작마다 바뀌어도 자동 허용.
-- ⬜ **다음**: 광맥 레이더 카드 탭 시 Bottom Sheet 짤림 버그 수정 → 광부 명함 → v2
+- ✅ **탐사 종목이해도구 완료 (2026-06-21)** — `StockStudyCard.jsx`: 5섹션, 2단계 로딩.
+  - Phase 1 즉시(ka10001+DART company.json): 영업이익률·ROE·EPS·시총·52주범위·KSIC업종명.
+  - Phase 2 lazy(DART 재무 3년): 매출·영업이익 추이 bar(YoY%), 부채비율.
+  - 숫자=주인공(금색 크게), bar=보조(얇은 액센트). 판정 텍스트 0개. 30분 캐시.
+  - `backend/app/services/stock_study_service.py` + `backend/data/ksic_names.json` 신규.
+- ⬜ **다음**: 광부 명함 공유 카드 → v2
 - ⚠️ **환경 불일치**: `backend/.venv`가 Python **3.14.5** (CLAUDE.md는 3.12 고정). 3.12 재구성 검토.
 - ⚠️ LS ELECTRIC 등 corp_code 미매핑 종목 보완 필요(현재 health_na 폴백).
 
 ## 11. 빌드 계획 — 다음 작업 순서
-
-**즉시 (버그)**
-1. **광맥 레이더 Bottom Sheet 짤림 버그** — 카드 탭 시 `RadarDetailSheet`가 화면 밖으로 잘림. `home-overlay`의 `overflow:hidden`이 원인으로 추정. 포지셔닝 수정 필요.
 
 **v1.2 나머지**
 1. **광부 명함** 공유 카드:
