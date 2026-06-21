@@ -1214,6 +1214,58 @@ body {
   letter-spacing: 0.01em;
 }
 
+/* ========== 홈 뉴스 스트립 ========== */
+.news-strip-wrap {
+  width: 100%;
+  overflow: hidden;
+}
+.news-strip {
+  display: flex;
+  gap: 7px;
+  overflow-x: auto;
+  padding: 2px 12px 4px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.news-strip::-webkit-scrollbar { display: none; }
+.news-pill {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: rgba(20,16,11,.72);
+  border: 1px solid rgba(232,179,57,.18);
+  border-radius: 20px;
+  padding: 6px 13px;
+  font-size: 12px;
+  color: var(--text);
+  cursor: pointer;
+  white-space: nowrap;
+  backdrop-filter: blur(6px);
+  max-width: 260px;
+  transition: background .15s, border-color .15s;
+}
+.news-pill:active { background: rgba(232,179,57,.1); border-color: rgba(232,179,57,.35); }
+.np-stock { font-weight: 700; color: var(--gold-bright); }
+.np-sep { color: var(--text-dim); }
+.np-title { color: var(--text); overflow: hidden; text-overflow: ellipsis; }
+
+/* 뉴스 아이템 Bottom Sheet */
+.news-item-sheet { padding-bottom: calc(env(safe-area-inset-bottom, 16px) + 16px); }
+.nis-stock { font-size: 11px; font-weight: 700; color: var(--gold-bright); margin-bottom: 8px; letter-spacing: .03em; }
+.nis-title { font-size: 1.05rem; font-weight: 700; color: var(--text); line-height: 1.5; margin-bottom: 10px; }
+.nis-meta { font-size: 0.75rem; color: var(--text-dim); margin-bottom: 18px; }
+.nis-link-btn {
+  display: block; width: 100%; padding: 13px;
+  background: var(--gold); color: #1a1206;
+  border: none; border-radius: 12px;
+  font-size: 15px; font-weight: 700;
+  text-align: center; text-decoration: none;
+  cursor: pointer; margin-bottom: 12px;
+}
+.nis-link-btn:active { opacity: .85; }
+.nis-disclaimer { font-size: 0.72rem; color: var(--text-dim); text-align: center; }
+
 /* ========== 광맥 레이더 패널 ========== */
 .radar-panel {
   margin: 6px 4px 0;

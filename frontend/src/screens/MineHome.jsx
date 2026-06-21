@@ -12,9 +12,10 @@ import LockedOverlay from '../components/LockedOverlay'
 import LoadingMascot from '../components/LoadingMascot'
 import RestoreReveal from '../components/RestoreReveal'
 import ErrorState from '../components/ErrorState'
-import SupplyDetailSheet from '../components/SupplyDetailSheet'
 import RadarPanel from '../components/RadarPanel'
 import RadarDetailSheet from '../components/RadarDetailSheet'
+import NewsStrip from '../components/NewsStrip'
+import NewsItemSheet from '../components/NewsItemSheet'
 import { goldDisplay, timeAgo } from '../utils/format'
 
 export default function MineHome() {
@@ -22,8 +23,8 @@ export default function MineHome() {
   const { data, loading, refreshing, error, cachedAt } = useScreenData('portfolio', market)
   const { refresh, levelData } = useDataStore()   // 전역 — 탭 전환 후에도 유지
   const [sheetOpen, setSheetOpen] = useState(false)
-  const [supplySheetOpen, setSupplySheetOpen] = useState(false)
   const [radarEvent, setRadarEvent] = useState(null)
+  const [newsItem, setNewsItem] = useState(null)
   const [highlights, setHighlights] = useState(null)  // [B] 수급 + [C] 업적 한 줄
   const [visitStreak, setVisitStreak] = useState(null) // 연속 방문일
 
@@ -69,11 +70,7 @@ export default function MineHome() {
             <Hud data={data} goldOverride={goldStr} refreshing={refreshing} levelData={levelData} achievement={visitStreak?.message || highlights?.achievement} onSync={() => refresh(market)} cachedAt={cachedAt} />
             <div className="home-pill-chips">
               <ReturnPanel data={data} onExpand={() => setSheetOpen(true)} />
-              {highlights?.supply?.text && (
-                <button className="supply-line" onClick={() => setSupplySheetOpen(true)}>
-                  📊 {highlights.supply.text}
-                </button>
-              )}
+              <NewsStrip market={market} onSelect={setNewsItem} />
               <HoldingChips
                 holdings={data.holdings}
                 onExpand={() => setSheetOpen(true)}
@@ -95,11 +92,8 @@ export default function MineHome() {
         </>
       )}
 
-      {supplySheetOpen && highlights?.supply && (
-        <SupplyDetailSheet
-          supply={highlights.supply}
-          onClose={() => setSupplySheetOpen(false)}
-        />
+      {newsItem && (
+        <NewsItemSheet item={newsItem} onClose={() => setNewsItem(null)} />
       )}
 
       {radarEvent && (
