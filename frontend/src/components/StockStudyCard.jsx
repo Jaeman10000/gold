@@ -11,15 +11,6 @@ function fmtNum(v, digits = 1) {
   return Number(v).toFixed(digits)
 }
 
-function fmtLargeWon(v) {
-  // DART는 원(KRW) 단위. 조원/억원으로 변환.
-  if (v === null || v === undefined) return null
-  const abs = Math.abs(v)
-  if (abs >= 1e12) return `${(v / 1e12).toFixed(1)}조`
-  if (abs >= 1e8)  return `${Math.round(v / 1e8)}억`
-  return String(v)
-}
-
 function fmtOgukWon(v) {
   // ka10001 단위는 억원
   if (v === null || v === undefined) return null
@@ -27,18 +18,21 @@ function fmtOgukWon(v) {
   return `${Math.round(v).toLocaleString()}억`
 }
 
-// ── 개별 수치 행 (숫자=주인공, bar=보조) ────────────────────────────────────
+// ── 개별 수치 행 ──────────────────────────────────────────────────────────────
+// 숫자=주인공(금색 크게), bar=보조(얇은 액센트)
+// meaning: 이 숫자가 무엇을 뜻하는지 평어 설명
+// formula: 산출 방식 (더 작고 흐림)
 
-function StatRow({ label, value, unit = '', desc, barCeil }) {
+function StatRow({ label, value, unit = '', meaning, formula, barCeil }) {
   if (value === null || value === undefined) {
     return (
       <div className="ssr">
         <div className="ssr-label">{label}</div>
         <div className="ssr-na">미제공</div>
+        {meaning && <div className="ssr-meaning">{meaning}</div>}
       </div>
     )
   }
-  // bar: value를 ceiling 대비 비율로 표현. ceiling을 명시하지 않아 "나쁨" 오해 차단.
   const pct = barCeil ? Math.min(Math.max(value, 0) / barCeil * 100, 100) : 0
 
   return (
@@ -50,14 +44,29 @@ function StatRow({ label, value, unit = '', desc, barCeil }) {
           <div className="ssr-bar-fill" style={{ width: `${pct}%` }} />
         </div>
       )}
-      {desc && <div className="ssr-desc">{desc}</div>}
+      {meaning  && <div className="ssr-meaning">{meaning}</div>}
+      {formula  && <div className="ssr-formula">산출: {formula}</div>}
     </div>
   )
 }
 
-// ── 3년 추이 bar ────────────────────────────────────────────────────────────
+// ── 일반 수치 행 (EPS/BPS처럼 bar 없는 것) ──────────────────────────────────
 
-function TrendBars({ years, field, yoyField, label }) {
+function PlainRow({ label, value, meaning, formula }) {
+  if (value === null || value === undefined) return null
+  return (
+    <div className="ssr">
+      <div className="ssr-label">{label}</div>
+      <div className="ssr-value" style={{ fontSize: '16px' }}>{value}</div>
+      {meaning && <div className="ssr-meaning">{meaning}</div>}
+      {formula && <div className="ssr-formula">산출: {formula}</div>}
+    </div>
+  )
+}
+
+// ── 3년 추이 bar ─────────────────────────────────────────────────────────────
+
+function TrendBars({ years, field, yoyField, label, meaning }) {
   const values = years.map(y => y[field]).filter(v => v !== null && v !== undefined && v > 0)
   if (!values.length) return <div className="stt-na">데이터 없음</div>
   const maxVal = Math.max(...values)
@@ -65,6 +74,7 @@ function TrendBars({ years, field, yoyField, label }) {
   return (
     <div className="study-trend">
       <div className="stt-label">{label}</div>
+      {meaning && <div className="stt-meaning">{meaning}</div>}
       {years.map((y, i) => {
         const val = y[field]
         const pct = (val && maxVal > 0) ? Math.min(val / maxVal * 100, 100) : 0
@@ -100,13 +110,11 @@ export default function StockStudyCard({ ticker, name, market }) {
     setOverview(null); setFinancials(null)
     setOvLoading(true); setFinLoading(true)
 
-    // Phase 1 즉시
     api.exploreStock(ticker, market)
       .then(setOverview)
       .catch(() => setOverview(null))
       .finally(() => setOvLoading(false))
 
-    // Phase 2 lazy (별도, 느림)
     api.exploreFinancials(ticker, market)
       .then(setFinancials)
       .catch(() => setFinancials(null))
@@ -135,6 +143,7 @@ export default function StockStudyCard({ ticker, name, market }) {
 
   return (
     <div className="study-card card">
+
       {/* ── 기본 정보 ──────────────────────────────────────── */}
       <div className="study-section">
         <div className="study-section-title">기본 정보</div>
@@ -142,7 +151,7 @@ export default function StockStudyCard({ ticker, name, market }) {
         {c.indutyName && (
           <div className="study-industry">
             <span className="si-name">{c.indutyName}</span>
-            <span className="si-note">표준산업분류(KSIC) 기준 · 상세 사업 소개는 추후</span>
+            <span className="si-note">표준산업분류(KSIC) 기준</span>
           </div>
         )}
 
@@ -163,10 +172,8 @@ export default function StockStudyCard({ ticker, name, market }) {
 
         {v.oyrHgst && v.oyrLwst && (
           <div className="study-52w">
-            <span className="s52-lbl">52주 범위</span>
-            <span className="s52-range">
-              {v.oyrLwst?.toLocaleString()}원 ─ {v.oyrHgst?.toLocaleString()}원
-            </span>
+            <span className="s52-lbl">52주 가격 범위</span>
+            <span className="s52-range">{v.oyrLwst?.toLocaleString()}원 ─ {v.oyrHgst?.toLocaleString()}원</span>
           </div>
         )}
       </div>
@@ -174,27 +181,31 @@ export default function StockStudyCard({ ticker, name, market }) {
       {/* ── 수익성 ────────────────────────────────────────── */}
       <div className="study-section">
         <div className="study-section-title">수익성</div>
+
         <StatRow
           label="영업이익률"
           value={v.opMargin}
           unit="%"
-          desc="영업이익 ÷ 매출액"
+          meaning="매출 100원을 팔았을 때 본업(영업활동)으로 실제 얼마가 남는지의 비율. 회사가 장사를 해서 얼마나 버는지 보여줌."
+          formula="영업이익 ÷ 매출액 × 100"
           barCeil={15}
         />
+
         <StatRow
           label="자기자본이익률 (ROE)"
           value={v.roe}
           unit="%"
-          desc="세후 순이익 ÷ 자기자본"
+          meaning="주주가 투자한 돈(자기자본)을 1년 동안 굴려서 순이익으로 얼마를 만들었는지. 주주 돈 활용 효율을 나타냄. 업종마다 기준이 다름."
+          formula="세후 순이익 ÷ 자기자본 × 100"
           barCeil={20}
         />
-        {v.eps !== null && v.eps !== undefined && (
-          <div className="ssr">
-            <div className="ssr-label">주당순이익 (EPS)</div>
-            <div className="ssr-value">{v.eps?.toLocaleString()}원</div>
-            <div className="ssr-desc">1주당 세후 순이익</div>
-          </div>
-        )}
+
+        <PlainRow
+          label="주당순이익 (EPS)"
+          value={v.eps !== null && v.eps !== undefined ? `${v.eps?.toLocaleString()}원` : null}
+          meaning="주식 1주가 1년 동안 벌어들인 순이익 금액. PER을 계산할 때 분모가 되는 수치."
+          formula="세후 순이익 ÷ 발행주식수"
+        />
       </div>
 
       {/* ── 성장성 ────────────────────────────────────────── */}
@@ -207,14 +218,18 @@ export default function StockStudyCard({ ticker, name, market }) {
           <div className="study-fin-loading">DART 재무 불러오는 중 (최대 15초)…</div>
         ) : years.length > 0 ? (
           <>
-            <TrendBars years={years} field="revenue"  yoyField="revenueYoy"  label="매출" />
-            <TrendBars years={years} field="opIncome" yoyField="opIncomeYoy" label="영업이익" />
-            <div className="study-trend-note">DART 사업보고서 기준 · 연간 비교 · YoY 전년대비</div>
+            <TrendBars
+              years={years} field="revenue" yoyField="revenueYoy" label="매출"
+              meaning="회사가 1년 동안 상품·서비스 판매로 벌어들인 총 수입. 사업 규모를 나타냄. YoY는 전년 대비 증감률."
+            />
+            <TrendBars
+              years={years} field="opIncome" yoyField="opIncomeYoy" label="영업이익"
+              meaning="매출에서 원가·판매관리비를 뺀 본업 이익. 매출이 늘어도 이 수치가 줄면 수익성이 달라지고 있다는 신호."
+            />
+            <div className="study-trend-note">DART 사업보고서 기준 · 연간 · YoY 전년대비 증감률</div>
           </>
         ) : (
-          <div className="study-na-msg">
-            {financials?.note || 'DART 재무 데이터를 불러오지 못했습니다.'}
-          </div>
+          <div className="study-na-msg">{financials?.note || 'DART 재무 데이터를 불러오지 못했습니다.'}</div>
         )}
       </div>
 
@@ -228,10 +243,11 @@ export default function StockStudyCard({ ticker, name, market }) {
           <div className="study-fin-loading">조회 중…</div>
         ) : financials?.latestDebtRatio !== null && financials?.latestDebtRatio !== undefined ? (
           <StatRow
-            label={`부채비율 (${years[0]?.year || '최신'}년 기준)`}
+            label={`부채비율 (${years[0]?.year || '최신'}년)`}
             value={financials.latestDebtRatio}
             unit="%"
-            desc="부채총계 ÷ 자본총계 × 100"
+            meaning="자기 돈 100원당 빌린 돈(부채)이 얼마나 되는지. 재무 구조가 얼마나 레버리지를 쓰는지 나타냄. 업종마다 통상적인 수준이 크게 다름."
+            formula="부채총계 ÷ 자본총계 × 100"
             barCeil={300}
           />
         ) : (
@@ -242,27 +258,48 @@ export default function StockStudyCard({ ticker, name, market }) {
       {/* ── 밸류에이션 ───────────────────────────────────── */}
       <div className="study-section">
         <div className="study-section-title">밸류에이션</div>
-        <StatRow label="PER" value={v.per} unit="배" desc="주가 ÷ 주당순이익(EPS)" barCeil={60} />
-        <StatRow label="PBR" value={v.pbr} unit="배" desc="주가 ÷ 주당순자산(BPS)" barCeil={5} />
+
+        <StatRow
+          label="PER (주가수익비율)"
+          value={v.per}
+          unit="배"
+          meaning="지금 주가가 연간 순이익(EPS)의 몇 배 수준인지. 현재 이익 기준으로 주가에 얼마만큼의 프리미엄이 붙어 있는지 보여줌. 성장 기대가 클수록 높게 형성되는 경향이 있으나, 업종마다 다름."
+          formula="주가 ÷ 주당순이익(EPS)"
+          barCeil={60}
+        />
+
+        <StatRow
+          label="PBR (주가순자산비율)"
+          value={v.pbr}
+          unit="배"
+          meaning="지금 주가가 회사 장부상 순자산(BPS)의 몇 배인지. 회사를 지금 문 닫고 자산을 팔면 주가 대비 얼마나 건질 수 있는지의 관계를 나타냄. 업종 특성에 따라 해석이 달라짐."
+          formula="주가 ÷ 주당순자산(BPS)"
+          barCeil={5}
+        />
+
         {v.ev !== null && v.ev !== undefined && (
-          <div className="ssr">
-            <div className="ssr-label">EV/EBITDA</div>
-            <div className="ssr-value">{fmtNum(v.ev)}배</div>
-            <div className="ssr-desc">기업가치 ÷ 영업이익+감가상각</div>
-          </div>
+          <PlainRow
+            label="EV/EBITDA"
+            value={`${fmtNum(v.ev)}배`}
+            meaning="기업 전체 가치(시가총액+순부채)가 세금·이자·감가상각 전 이익의 몇 배인지. 부채 구조가 다른 기업들 사이에서 수익성을 비교할 때 쓰는 지표."
+            formula="기업가치(EV) ÷ EBITDA"
+          />
         )}
-        {v.bps !== null && v.bps !== undefined && (
-          <div className="ssr">
-            <div className="ssr-label">주당순자산 (BPS)</div>
-            <div className="ssr-value">{v.bps?.toLocaleString()}원</div>
-          </div>
-        )}
+
+        <PlainRow
+          label="주당순자산 (BPS)"
+          value={v.bps !== null && v.bps !== undefined ? `${v.bps?.toLocaleString()}원` : null}
+          meaning="주식 1주에 해당하는 회사의 장부상 순자산 금액. PBR을 계산할 때 분모가 됨."
+          formula="(자산총계 - 부채총계) ÷ 발행주식수"
+        />
+
         {v.forExhRt !== null && v.forExhRt !== undefined && (
-          <div className="ssr">
-            <div className="ssr-label">외국인 소진율</div>
-            <div className="ssr-value">{fmtNum(v.forExhRt)}%</div>
-            <div className="ssr-desc">외국인 보유 한도 대비 실제 보유 비율</div>
-          </div>
+          <PlainRow
+            label="외국인 소진율"
+            value={`${fmtNum(v.forExhRt)}%`}
+            meaning="외국인이 살 수 있는 주식 한도(외국인 보유 한도) 중 실제로 채워진 비율. 외국인의 현재 수급 여력 파악에 참고."
+            formula="외국인 실제 보유 ÷ 외국인 보유 한도 × 100"
+          />
         )}
       </div>
 

@@ -1577,3 +1577,25 @@ body {
   color: var(--text-dim);
   padding: 8px 0;
 }
+
+/* ── meaning / formula 추가 (지표 평어 설명) ── */
+.ssr-meaning {
+  grid-column: 1 / -1;
+  font-size: 11.5px;
+  color: rgba(230,220,200,.72);
+  line-height: 1.55;
+  margin-top: 5px;
+}
+.ssr-formula {
+  grid-column: 1 / -1;
+  font-size: 10px;
+  color: var(--text-dim);
+  opacity: .55;
+  margin-top: 2px;
+}
+.stt-meaning {
+  font-size: 11px;
+  color: rgba(230,220,200,.65);
+  line-height: 1.5;
+  margin-bottom: 6px;
+}
