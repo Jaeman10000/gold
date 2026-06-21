@@ -8,7 +8,7 @@ import { api } from '../api/client'
 import MineScene from '../components/MineScene'
 import Hud from '../components/Hud'
 import AssetSummary from '../components/AssetSummary'
-import MineGrid from '../components/MineGrid'
+import MineColumn from '../components/MineColumn'
 import HoldingsSheet from '../components/HoldingsSheet'
 import LockedOverlay from '../components/LockedOverlay'
 import LoadingMascot from '../components/LoadingMascot'
@@ -75,9 +75,9 @@ export default function MineHome() {
             />
           </div>
 
-          {/* 중앙: 2×2 금광 그리드 (부감 뷰 주인공, 페이지 스와이프) */}
+          {/* 중앙: 세로 2칸 금광 (각자 다른 광맥 변주, 페이지 스와이프) */}
           {data.holdings?.length > 0 && (
-            <MineGrid
+            <MineColumn
               holdings={data.holdings}
               market={data.market}
               onOpenAll={() => setSheetOpen(true)}

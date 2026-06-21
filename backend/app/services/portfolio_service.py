@@ -6,10 +6,77 @@
   종목 수익률   = (current_price - avg_price) / avg_price * 100
   전체 수익률   = (총평가 - 총원가) / 총원가 * 100   (원 액수 합산 기반)
 """
+from datetime import date, datetime
+
 from app.data.provider import get_provider
 from app.db import SessionLocal
-from app.models import Dividend
-from app.services import cache_service, common, scoring_service
+from app.models import Dividend, Trade
+from app.services import cache_service, common, meta_service, scoring_service
+
+
+def _parse_date(s: str) -> date | None:
+    """'YYYY-MM-DD' 또는 'YYYYMMDD' → date. 실패 시 None."""
+    if not s:
+        return None
+    s = str(s).strip()
+    for fmt in ("%Y-%m-%d", "%Y%m%d"):
+        try:
+            return datetime.strptime(s, fmt).date()
+        except ValueError:
+            continue
+    return None
+
+
+def _enrich_holdings(market: str, holdings: list[dict], provider) -> None:
+    """홈 금광 변주용 종목별 누적 지표 — firstBuyDate·holdingDays·dividendCount.
+
+    하드룰(§4 스타일 중립): 광물 누적은 보유기간(중립)만. 배당횟수는 보조 표식.
+    데이터 한계: 키움 kt00009 60일 → 그 이전 매수는 CSV 임포트 or first_link_date 폴백.
+    거래 소스 = API(kt00009 60일) + DB(CSV 임포트) 합산 — vault와 동일.
+    """
+    # API 거래는 DB에 영구 저장되지 않으므로 직접 합산해야 첫매수일이 잡힘
+    try:
+        api_trades = provider.get_trades(market) or []
+    except Exception:
+        api_trades = []
+
+    db = SessionLocal()
+    try:
+        db_trades = [
+            {"date": r.date, "ticker": r.ticker, "side": r.side}
+            for r in db.query(Trade).filter_by(market=market).all()
+        ]
+
+        # 종목별 배당 횟수
+        div_count: dict[str, int] = {}
+        for r in db.query(Dividend).filter_by(market=market).all():
+            div_count[r.ticker] = div_count.get(r.ticker, 0) + 1
+
+        # 거래기록 없는 종목 폴백 바닥값 = 첫 연동일(앱이 지켜본 시작)
+        link_floor = _parse_date(meta_service.get_first_link_date(db) or "")
+        today = date.today()
+    finally:
+        db.close()
+
+    # 종목별 첫 매수일 (API + DB 의 BUY 중 최소 날짜)
+    first_buy: dict[str, date] = {}
+    for t in api_trades + db_trades:
+        if (t.get("side") or "").upper() != "BUY":
+            continue
+        d = _parse_date(t.get("date"))
+        tk = t.get("ticker")
+        if d and tk and (tk not in first_buy or d < first_buy[tk]):
+            first_buy[tk] = d
+
+    for h in holdings:
+        fb = first_buy.get(h["ticker"]) or link_floor
+        if fb:
+            h["firstBuyDate"] = fb.isoformat()
+            h["holdingDays"] = max(1, (today - fb).days + 1)
+        else:
+            h["firstBuyDate"] = None
+            h["holdingDays"] = None
+        h["dividendCount"] = div_count.get(h["ticker"], 0)
 
 
 def _pending_dividend(market: str) -> float:
@@ -52,6 +119,7 @@ def build_portfolio(market: str, pending_override: int | None = None, force: boo
 
     cur = common.currency_of(market)
     holdings = _compute_holdings(provider.get_holdings(market))
+    _enrich_holdings(market, holdings, provider)  # 종목별 누적(보유일·배당횟수) — 홈 금광 변주
 
     # 미수확 배당 합계 = pendingDividend. 0 → idle, >0 → claimable.
     # pending_override 는 상태기계 테스트용(쿼리).
