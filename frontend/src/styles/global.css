@@ -1852,17 +1852,24 @@ body {
 }
 .gm-outer.gm-dimmed { filter: grayscale(0.7) brightness(0.45); }
 
-/* plate 표시 영역 — 전체 화면 덮기. 헤더 그라디언트가 플레이트 위에 블렌드. */
+/* plate 표시 영역 — 헤더 아래~독 위. CSS cover: 가로 꽉+세로 오버플로우로 레터박스 없음 */
 .gm-plate-area {
-  position: absolute; inset: 0;
-  display: flex; justify-content: center; align-items: flex-start;
+  position: absolute; left: 0; right: 0; bottom: 64px;
+  /* top: topOffset — GwangmaekScene inline style로 주입 */
+  display: flex; justify-content: center; align-items: center;
   overflow: hidden;
 }
+/* 하단 암전 페이드 — 독과의 경계선 숨김 */
+.gm-plate-area::after {
+  content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 64px;
+  background: linear-gradient(to top, #0c0a07 0%, transparent 100%);
+  pointer-events: none; z-index: 2;
+}
 
-/* plate wrapper — 높이로 화면을 꽉 채움. 비율상 가로가 약간 넘쳐 양옆 크롭됨(검정 없음). */
+/* plate wrapper — min-width+min-height 동시: 가로 꽉 채우면서 세로 살짝 넘침(cover 효과) */
 .gm-plate-wrap {
   position: relative;
-  width: auto;
+  min-width: 100%;
   min-height: 100%;
   aspect-ratio: 941 / 1672;
   flex-shrink: 0;

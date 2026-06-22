@@ -14,13 +14,13 @@ const MINERS = [
 ]
 
 // ── 챔버 라벨칩 위치 (챔버별 바위벽 공간)
-// 플레이트가 화면보다 가로로 약 8-10% 넘쳐서 크롭되므로 left/right 최소 14% 이상 사용.
-// 일꾼과 반대쪽 바위벽에 배치: C1·C3 왼쪽, C2·C4 오른쪽.
+// 플레이트 가로 = 화면 가로 (CSS cover, 오버플로우 없음) → left/right 5% 사용 가능.
+// 일꾼과 반대쪽 바위벽 배치: C1·C3 왼쪽, C2·C4 오른쪽.
 const CHIP_POS = [
-  { left: '16%', top: '15%'  }, // C1: footY 0.205, 왼쪽 바위벽
-  { right: '12%', top: '41%' }, // C2: footY 0.470, 오른쪽 바위벽
-  { left: '16%',  top: '64%' }, // C3: footY 0.715, 왼쪽 바위벽
-  { right: '12%', top: '79%' }, // C4: footY 0.865, 오른쪽 바위벽
+  { left: '5%',  top: '14%' }, // C1: footY 0.205
+  { right: '5%', top: '40%' }, // C2: footY 0.470
+  { left: '5%',  top: '63%' }, // C3: footY 0.715
+  { right: '5%', top: '77%' }, // C4: footY 0.865
 ]
 
 // ── 금맥 발광 중심점 (챔버별 광맥 위치 추정) ───────────────────────────
@@ -71,8 +71,8 @@ function compactAmt(market, v) {
 export default function GwangmaekScene({ top4 = [], market = 'KR', topOffset = 210, dimmed = false }) {
   return (
     <div className={`gm-outer${dimmed ? ' gm-dimmed' : ''}`} aria-hidden="true">
-      {/* plate 영역 — 전체 화면 덮기, 헤더 그라디언트와 블렌드 */}
-      <div className="gm-plate-area">
+      {/* plate 영역 — 헤더 아래 시작 (topOffset), CSS cover로 레터박스 없음 */}
+      <div className="gm-plate-area" style={{ top: topOffset }}>
         <div className="gm-plate-wrap">
 
           {/* L0: 배경 plate */}
