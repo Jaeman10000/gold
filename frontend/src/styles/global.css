@@ -1852,10 +1852,10 @@ body {
 }
 .gm-outer.gm-dimmed { filter: grayscale(0.7) brightness(0.45); }
 
-/* plate 표시 영역 (헤더 아래 ~ 탭바 위) — width 100% cover, 좌우 letterbox 없음 */
+/* plate 표시 영역 — 독 바로 위에 하단 고정, 폭 100% cover, 위는 헤더 뒤로 확장 */
 .gm-plate-area {
-  position: absolute; left: 0; right: 0; bottom: 0;
-  display: flex; justify-content: center; align-items: flex-start;
+  position: absolute; left: 0; right: 0; top: 0; bottom: 64px;
+  display: flex; justify-content: center; align-items: flex-end;
   overflow: hidden;
 }
 

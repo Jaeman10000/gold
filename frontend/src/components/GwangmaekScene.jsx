@@ -69,8 +69,8 @@ function compactAmt(market, v) {
 export default function GwangmaekScene({ top4 = [], market = 'KR', topOffset = 210, dimmed = false }) {
   return (
     <div className={`gm-outer${dimmed ? ' gm-dimmed' : ''}`} aria-hidden="true">
-      {/* plate 영역 — 헤더 아래부터 탭바 위까지 */}
-      <div className="gm-plate-area" style={{ top: topOffset }}>
+      {/* plate 영역 — 독 바로 위 하단 고정, 플레이트 상단은 헤더 뒤로 확장 */}
+      <div className="gm-plate-area">
         <div className="gm-plate-wrap">
 
           {/* L0: 배경 plate */}
