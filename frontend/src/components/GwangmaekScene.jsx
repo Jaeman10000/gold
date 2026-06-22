@@ -1,12 +1,8 @@
 // 홈 광산 단면 씬 — gwangmaek_plate_clean.png + 일꾼 4명 + 코드 FX
-// plate는 헤더 아래(topOffset)에서 시작, 폭을 동적 계산해 챔버4까지 전부 표시.
+// plate는 독 바로 위에 하단 고정. 챔버2~4 항상 표시, 챔버1은 헤더 뒤로 확장.
 // CLAUDE.md §5: 발광·움직임은 앰비언트 연출만. 매수/매도 추천 금지.
-import { useMemo } from 'react'
 import { profitColor } from '../utils/format'
 import { gwangmaek } from '../assets'
-
-const PLATE_W_H   = 941 / 1672  // 플레이트 가로/세로 비율
-const SHOW_FRAC   = 0.88         // 이 비율까지 표시 (챔버4 발=0.865 + 여유)
 
 // ── 일꾼 배치 (plate % 기준, 발-중앙 앵커) ─────────────────────────────
 // footY = 발 위치 / hFrac = 키 / cx = 수평 중앙
@@ -19,7 +15,7 @@ const MINERS = [
 
 // ── 챔버 라벨칩 위치 (빈 바위 공간) ────────────────────────────────────
 const CHIP_POS = [
-  { left: '6%',  top: '3.5%' },
+  { left: '6%',  top: '25%'  }, // C1: 헤더 아래에 표시 (일꾼은 헤더 뒤로 확장)
   { left: '6%',  top: '34%'  },
   { left: '6%',  top: '56%'  },
   { left: '6%',  top: '74%'  },
@@ -71,19 +67,11 @@ function compactAmt(market, v) {
 }
 
 export default function GwangmaekScene({ top4 = [], market = 'KR', topOffset = 210, dimmed = false }) {
-  // 사용 가능 높이 = 뷰포트 - 헤더 - 독(64px)
-  // 챔버4(86.5%)가 딱 들어오는 최대 폭 계산. 화면 폭보다 크면 화면 폭 사용.
-  const plateW = useMemo(() => {
-    const availH = window.innerHeight - topOffset - 64
-    const maxW   = (availH / SHOW_FRAC) * PLATE_W_H
-    return Math.min(window.innerWidth, Math.round(maxW))
-  }, [topOffset])
-
   return (
     <div className={`gm-outer${dimmed ? ' gm-dimmed' : ''}`} aria-hidden="true">
-      {/* plate 영역 — 헤더 바로 아래(topOffset)에서 시작, 폭은 챔버4 기준 계산 */}
-      <div className="gm-plate-area" style={{ top: topOffset }}>
-        <div className="gm-plate-wrap" style={{ width: plateW }}>
+      {/* plate 영역 — 독 바로 위 하단 고정, 100% 폭. 챔버1 상단은 헤더 뒤로 확장 */}
+      <div className="gm-plate-area">
+        <div className="gm-plate-wrap">
 
           {/* L0: 배경 plate */}
           <img className="gm-plate-img" src={gwangmaek.plate} alt="" draggable="false" />
