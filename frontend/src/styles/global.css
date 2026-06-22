@@ -1854,14 +1854,14 @@ body {
 
 /* plate 표시 영역 — 헤더 아래~독 위. CSS cover: 가로 꽉+세로 오버플로우로 레터박스 없음 */
 .gm-plate-area {
-  position: absolute; left: 0; right: 0; bottom: 64px;
+  position: absolute; left: 0; right: 0; bottom: 0;
   /* top: topOffset — GwangmaekScene inline style로 주입 */
   display: flex; justify-content: center; align-items: center;
   overflow: hidden;
 }
-/* 하단 암전 페이드 — 독과의 경계선 숨김 */
+/* 하단 암전 페이드 — 독·스트릭 텍스트 아래로 자연스럽게 소멸 */
 .gm-plate-area::after {
-  content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 64px;
+  content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 100px;
   background: linear-gradient(to top, #0c0a07 0%, transparent 100%);
   pointer-events: none; z-index: 2;
 }

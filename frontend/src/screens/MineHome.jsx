@@ -34,7 +34,7 @@ export default function MineHome() {
     })
     ro.observe(el)
     return () => ro.disconnect()
-  }, [])
+  }, [data])
 
   useEffect(() => {
     setHighlights(null)
