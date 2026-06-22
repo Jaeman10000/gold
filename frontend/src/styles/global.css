@@ -1854,32 +1854,29 @@ body {
 }
 .gm-outer.gm-dimmed { filter: grayscale(0.7) brightness(0.45); }
 
-/* plate 표시 영역 — 헤더 아래~독 위. CSS cover: 가로 꽉+세로 오버플로우로 레터박스 없음 */
+/* plate 표시 영역 — 헤더 아래(topOffset) ~ 독 위. flex center로 세로 대칭 크롭 */
 .gm-plate-area {
   position: absolute; left: 0; right: 0;
   bottom: calc(56px + env(safe-area-inset-bottom, 0px));
   /* top: topOffset — GwangmaekScene inline style로 주입 */
+  display: flex; justify-content: center; align-items: center;
   overflow: hidden;
 }
-/* 하단 페이드 — 독·스트릭 텍스트 아래로 자연스럽게 소멸 */
-.gm-plate-area::after {
-  content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 100px;
-  background: linear-gradient(to top, #0c0a07 0%, transparent 100%);
-  pointer-events: none; z-index: 2;
-}
 
-/* plate wrapper — 컨테이너 100% 채움. 이미지는 object-fit:cover로 비율 유지 */
+/* plate wrapper — 이미지 비율 고정(941:1672). 가로=100%, 세로는 비율로 결정.
+   컨테이너보다 높으면 위아래 대칭 크롭 → C1~C4 모두 보임. */
 .gm-plate-wrap {
   position: relative;
   width: 100%;
-  height: 100%;
+  aspect-ratio: 941 / 1672;
+  flex-shrink: 0;
 }
 
-/* 배경 이미지 — cover로 컨테이너 꽉 채움, 비율 유지하며 중앙 크롭 */
+/* 배경 이미지 — wrapper 비율이 이미지 비율과 같으므로 fill = 왜곡 없음 */
 .gm-plate-img {
   position: absolute; inset: 0;
   width: 100%; height: 100%;
-  object-fit: cover; object-position: center center; display: block;
+  object-fit: fill; display: block;
   user-select: none; -webkit-user-select: none; pointer-events: none;
 }
 
