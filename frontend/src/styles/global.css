@@ -1854,7 +1854,7 @@ body {
 
 /* plate 표시 영역 — 헤더 아래~독 위. CSS cover: 가로 꽉+세로 오버플로우로 레터박스 없음 */
 .gm-plate-area {
-  position: absolute; left: 0; right: 0; bottom: 0;
+  position: absolute; left: 0; right: 0; bottom: 64px;
   /* top: topOffset — GwangmaekScene inline style로 주입 */
   overflow: hidden;
 }
