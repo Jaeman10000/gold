@@ -1855,7 +1855,7 @@ body {
 /* plate 표시 영역 — 헤더 아래~독 위. 플레이트를 수직 가운데 정렬해서
    챔버 바깥 빈 바위공간만 위아래 크롭. 챔버1~4 전부 표시됨. */
 .gm-plate-area {
-  position: absolute; left: 0; right: 0; bottom: 64px;
+  position: absolute; left: 0; right: 0; bottom: 0;
   display: flex; justify-content: center; align-items: center;
   overflow: hidden;
 }
@@ -1929,11 +1929,11 @@ body {
   max-width: 46%;
 }
 .gm-chip-name {
-  font-size: 10px; font-weight: 700; color: #f3e9d6;
+  font-size: 13px; font-weight: 700; color: #f3e9d6;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.gm-chip-rate { font-size: 12px; font-weight: 800; line-height: 1.25; }
-.gm-chip-amt  { font-size: 9.5px; color: rgba(243,233,214,0.62); }
+.gm-chip-rate { font-size: 15px; font-weight: 800; line-height: 1.25; }
+.gm-chip-amt  { font-size: 11px; color: rgba(243,233,214,0.72); }
 
 /* ── 금맥 발광 펄스 ── */
 .gm-vein-glow {
