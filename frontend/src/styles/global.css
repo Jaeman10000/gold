@@ -1856,30 +1856,27 @@ body {
 .gm-plate-area {
   position: absolute; left: 0; right: 0; bottom: 0;
   /* top: topOffset — GwangmaekScene inline style로 주입 */
-  display: flex; justify-content: center; align-items: center;
   overflow: hidden;
 }
-/* 하단 암전 페이드 — 독·스트릭 텍스트 아래로 자연스럽게 소멸 */
+/* 하단 페이드 — 독·스트릭 텍스트 아래로 자연스럽게 소멸 */
 .gm-plate-area::after {
   content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 100px;
   background: linear-gradient(to top, #0c0a07 0%, transparent 100%);
   pointer-events: none; z-index: 2;
 }
 
-/* plate wrapper — min-width+min-height 동시: 가로 꽉 채우면서 세로 살짝 넘침(cover 효과) */
+/* plate wrapper — 컨테이너 100% 채움. 이미지는 object-fit:cover로 비율 유지 */
 .gm-plate-wrap {
   position: relative;
-  min-width: 100%;
-  min-height: 100%;
-  aspect-ratio: 941 / 1672;
-  flex-shrink: 0;
+  width: 100%;
+  height: 100%;
 }
 
-/* 배경 이미지 */
+/* 배경 이미지 — cover로 컨테이너 꽉 채움, 비율 유지하며 중앙 크롭 */
 .gm-plate-img {
   position: absolute; inset: 0;
   width: 100%; height: 100%;
-  object-fit: fill; display: block;
+  object-fit: cover; object-position: center center; display: block;
   user-select: none; -webkit-user-select: none; pointer-events: none;
 }
 
