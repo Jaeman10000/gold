@@ -1852,18 +1852,20 @@ body {
 }
 .gm-outer.gm-dimmed { filter: grayscale(0.7) brightness(0.45); }
 
-/* plate 표시 영역 — 독 바로 위 하단 고정, 위로 확장. letterbox 없음 */
+/* plate 표시 영역 — 헤더 아래~독 위. 플레이트를 수직 가운데 정렬해서
+   챔버 바깥 빈 바위공간만 위아래 크롭. 챔버1~4 전부 표시됨. */
 .gm-plate-area {
-  position: absolute; left: 0; right: 0; top: 0; bottom: 64px;
-  display: flex; justify-content: center; align-items: flex-end;
+  position: absolute; left: 0; right: 0; bottom: 64px;
+  display: flex; justify-content: center; align-items: center;
   overflow: hidden;
 }
 
-/* plate wrapper — 100% 폭, 비율 유지 */
+/* plate wrapper — 100% 폭 고정, 비율로 높이 결정. flex-shrink:0으로 압축 방지 */
 .gm-plate-wrap {
   position: relative;
   width: 100%;
   aspect-ratio: 941 / 1672;
+  flex-shrink: 0;
 }
 
 /* 배경 이미지 */
