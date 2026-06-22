@@ -1852,20 +1852,18 @@ body {
 }
 .gm-outer.gm-dimmed { filter: grayscale(0.7) brightness(0.45); }
 
-/* plate 표시 영역 (헤더 아래 ~ 탭바 위) */
+/* plate 표시 영역 (헤더 아래 ~ 탭바 위) — width 100% cover, 좌우 letterbox 없음 */
 .gm-plate-area {
-  position: absolute; left: 0; right: 0; bottom: 64px;
-  display: flex; justify-content: center; align-items: stretch;
+  position: absolute; left: 0; right: 0; bottom: 0;
+  display: flex; justify-content: center; align-items: flex-start;
   overflow: hidden;
 }
 
-/* plate wrapper — 941:1672 비율 유지, 높이 채움, 좌우 letterbox */
+/* plate wrapper — 너비 100% 기준 비율 유지 (height auto) */
 .gm-plate-wrap {
   position: relative;
-  height: 100%;
+  width: 100%;
   aspect-ratio: 941 / 1672;
-  max-width: 100%;
-  flex-shrink: 0;
 }
 
 /* 배경 이미지 */
@@ -1885,18 +1883,35 @@ body {
 .gm-miner-img {
   height: 100%; width: auto; display: block;
   filter: drop-shadow(0 4px 12px rgba(0,0,0,0.8));
+  transform-origin: bottom center;
 }
 
-/* 일꾼 애니메이션 — 포지션 div 가 translateX(-50%) 담당, 자식은 Y/X 이동만 */
-.gm-anim-bob  { animation: gmBob  2.4s ease-in-out infinite; }
-.gm-anim-saw  { animation: gmSaw  0.50s ease-in-out infinite; }
-.gm-anim-sort { animation: gmSort 2.8s ease-in-out infinite 0.3s; }
-.gm-anim-pick { animation: gmPick 0.58s ease-in-out infinite; }
+/* 일꾼 애니메이션 — rotate+translate 조합, 발 아래 pivot */
+.gm-anim-bob  { animation: gmBob  1.2s ease-in-out infinite; }
+.gm-anim-saw  { animation: gmSaw  0.8s  ease-in-out infinite; }
+.gm-anim-sort { animation: gmSort 1.5s ease-in-out infinite 0.3s; }
+.gm-anim-pick { animation: gmPick 0.9s  ease-in-out infinite; }
 
-@keyframes gmBob  { 0%,100%{ transform:translateY(0) }     50%{ transform:translateY(-6px) } }
-@keyframes gmSaw  { 0%,100%{ transform:translateX(-6px) }  50%{ transform:translateX(6px) } }
-@keyframes gmSort { 0%,100%{ transform:translateY(0) }     50%{ transform:translateY(-3px) } }
-@keyframes gmPick { 0%,100%{ transform:translateX(-5px) }  50%{ transform:translateX(5px) } }
+/* C1 carry: 들어올리기 상체 기울기 */
+@keyframes gmBob {
+  0%, 100% { transform: rotate(0deg) translateY(0); }
+  50%       { transform: rotate(-8deg) translateY(-4px); }
+}
+/* C2 sawing: 좌우 톱질 */
+@keyframes gmSaw {
+  0%, 100% { transform: rotate(-3deg) translateX(-6px); }
+  50%       { transform: rotate(3deg)  translateX(6px); }
+}
+/* C3 sorting: 선별 반복 기울기 */
+@keyframes gmSort {
+  0%, 100% { transform: rotate(-5deg) translateY(-3px); }
+  50%       { transform: rotate(0deg)  translateY(0); }
+}
+/* C4 pickaxe: 곡괭이 박자 */
+@keyframes gmPick {
+  0%, 100% { transform: rotate(-5deg) translateX(-5px); }
+  50%       { transform: rotate(5deg)  translateX(5px); }
+}
 
 /* ── 챔버 종목 라벨 칩 ── */
 .gm-chip {
