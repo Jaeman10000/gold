@@ -13,14 +13,14 @@ const MINERS = [
   { cx: 0.500, footY: 0.865, hFrac: 0.072, anim: 'gm-anim-pick' }, // C4: 곡괭이
 ]
 
-// ── 챔버 라벨칩 위치 (챔버별 빈 바위 공간, 일꾼 footY 기준)
-// C1 footY=0.205 → 일꾼 바로 왼쪽. C2 footY=0.470 → 오른쪽 공간.
-// C3 footY=0.715 → 왼쪽. C4 footY=0.865 → 오른쪽.
+// ── 챔버 라벨칩 위치 (챔버별 바위벽 공간)
+// 플레이트가 화면보다 가로로 약 8-10% 넘쳐서 크롭되므로 left/right 최소 14% 이상 사용.
+// 일꾼과 반대쪽 바위벽에 배치: C1·C3 왼쪽, C2·C4 오른쪽.
 const CHIP_POS = [
-  { left: '5%',  top: '14%'  }, // C1: footY 0.205 위 (상단 여백)
-  { right: '5%', top: '41%'  }, // C2: footY 0.470, 오른쪽 공간
-  { left: '5%',  top: '64%'  }, // C3: footY 0.715, 왼쪽 공간
-  { right: '5%', top: '80%'  }, // C4: footY 0.865, 오른쪽 공간
+  { left: '16%', top: '15%'  }, // C1: footY 0.205, 왼쪽 바위벽
+  { right: '12%', top: '41%' }, // C2: footY 0.470, 오른쪽 바위벽
+  { left: '16%',  top: '64%' }, // C3: footY 0.715, 왼쪽 바위벽
+  { right: '12%', top: '79%' }, // C4: footY 0.865, 오른쪽 바위벽
 ]
 
 // ── 금맥 발광 중심점 (챔버별 광맥 위치 추정) ───────────────────────────
@@ -71,8 +71,8 @@ function compactAmt(market, v) {
 export default function GwangmaekScene({ top4 = [], market = 'KR', topOffset = 210, dimmed = false }) {
   return (
     <div className={`gm-outer${dimmed ? ' gm-dimmed' : ''}`} aria-hidden="true">
-      {/* plate 영역 — 헤더 아래 시작, 플레이트 수직 가운데 정렬 + 크롭 */}
-      <div className="gm-plate-area" style={{ top: topOffset }}>
+      {/* plate 영역 — 전체 화면 덮기, 헤더 그라디언트와 블렌드 */}
+      <div className="gm-plate-area">
         <div className="gm-plate-wrap">
 
           {/* L0: 배경 plate */}

@@ -2,11 +2,10 @@
 // 1단: 레벨 배지 + EXP 채굴 게이지 + 아이콘 (한 줄)
 // 2단: 등급칩 · 시장토글 · 성향칩
 // (총 평가금액·수익률은 AssetSummary로, 연속방문은 하단으로 분리 — 씬이 주인공)
-import MarketToggle from './MarketToggle'
 import { syncTime } from '../utils/format'
 
 export default function Hud({ data, refreshing, levelData, onSync, cachedAt }) {
-  const { veinGrade, disposition } = data
+  const { veinGrade } = data
 
   // 레벨 데이터 (없으면 기본값)
   const level    = levelData?.level      ?? 1
@@ -56,13 +55,6 @@ export default function Hud({ data, refreshing, levelData, onSync, cachedAt }) {
           <span className="h-icon" aria-label="알림">🔔</span>
           <span className="h-icon" aria-label="설정">⚙</span>
         </div>
-      </div>
-
-      {/* 2단: 등급칩 · 시장토글 · 성향칩 */}
-      <div className="h-row2">
-        <span className="h-chip grade">{veinGrade.label} · {veinGrade.score}</span>
-        <MarketToggle />
-        <span className="h-chip disp">성향 · {disposition}</span>
       </div>
 
     </div>

@@ -1852,18 +1852,18 @@ body {
 }
 .gm-outer.gm-dimmed { filter: grayscale(0.7) brightness(0.45); }
 
-/* plate 표시 영역 — 헤더 아래~독 위. 플레이트를 수직 가운데 정렬해서
-   챔버 바깥 빈 바위공간만 위아래 크롭. 챔버1~4 전부 표시됨. */
+/* plate 표시 영역 — 전체 화면 덮기. 헤더 그라디언트가 플레이트 위에 블렌드. */
 .gm-plate-area {
-  position: absolute; left: 0; right: 0; bottom: 0;
-  display: flex; justify-content: center; align-items: center;
+  position: absolute; inset: 0;
+  display: flex; justify-content: center; align-items: flex-start;
   overflow: hidden;
 }
 
-/* plate wrapper — 100% 폭 고정, 비율로 높이 결정. flex-shrink:0으로 압축 방지 */
+/* plate wrapper — 높이로 화면을 꽉 채움. 비율상 가로가 약간 넘쳐 양옆 크롭됨(검정 없음). */
 .gm-plate-wrap {
   position: relative;
-  width: 100%;
+  width: auto;
+  min-height: 100%;
   aspect-ratio: 941 / 1672;
   flex-shrink: 0;
 }
