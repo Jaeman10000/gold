@@ -1852,14 +1852,14 @@ body {
 }
 .gm-outer.gm-dimmed { filter: grayscale(0.7) brightness(0.45); }
 
-/* plate 표시 영역 — 독 바로 위에 하단 고정, 폭 100% cover, 위는 헤더 뒤로 확장 */
+/* plate 표시 영역 — 헤더 아래부터 독 위까지. top은 JSX inline(topOffset)으로 설정 */
 .gm-plate-area {
-  position: absolute; left: 0; right: 0; top: 0; bottom: 64px;
-  display: flex; justify-content: center; align-items: flex-end;
+  position: absolute; left: 0; right: 0; bottom: 64px;
+  display: flex; justify-content: center; align-items: flex-start;
   overflow: hidden;
 }
 
-/* plate wrapper — 너비 100% 기준 비율 유지 (height auto) */
+/* plate wrapper — 폭은 JSX에서 동적 계산(챔버4까지 표시 보장). fallback: 100% */
 .gm-plate-wrap {
   position: relative;
   width: 100%;
