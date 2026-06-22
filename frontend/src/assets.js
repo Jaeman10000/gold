@@ -1,5 +1,10 @@
 // 루트 assets/ 의 분리 에셋을 한 곳에서 import (CLAUDE.md §5: 한 장에 굽지 않음).
 import bgMine from '@assets/scene/bg_mine.png'
+import gwangmaekPlate from '@assets/scene/new/gwangmaek_plate_clean.png'
+import miner1Carry   from '@assets/scene/new/miner_1_carry.png'
+import miner2Sawing  from '@assets/scene/new/miner_2_sawing.png'
+import miner3Sorting from '@assets/scene/new/miner_3_sorting.png'
+import miner4Pickaxe from '@assets/scene/new/miner_4_pickaxe.png'
 import veinGold from '@assets/scene/vein_gold.png'
 import cartFull from '@assets/scene/cart_full.png'   // 기본
 import cartEmpty from '@assets/scene/cart_empty.png'  // 수확 후
@@ -48,6 +53,11 @@ export const scene = {
   gemGold,
   // 일꾼 곡괭이질 4프레임 (0→3). 같은 자리에 겹쳐두고 프레임만 교체.
   minerSwing: [minerSwing0, minerSwing1, minerSwing2, minerSwing3],
+}
+
+export const gwangmaek = {
+  plate: gwangmaekPlate,
+  miners: [miner1Carry, miner2Sawing, miner3Sorting, miner4Pickaxe],
 }
 
 export const emblems = {
