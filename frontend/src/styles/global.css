@@ -15,6 +15,10 @@
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body, #root { height: 100%; }
+html, body {
+  /* 당겨서새로고침·바운스 차단 (핀치 줌 시 페이지 출렁임 방지) */
+  overscroll-behavior: none;
+}
 body {
   font-family: 'Pretendard', -apple-system, 'Segoe UI', 'Malgun Gothic', sans-serif;
   background: #0c0a07;
@@ -36,8 +40,8 @@ body {
 /* 독이 position:fixed 라 app-main 이 뷰포트 전체를 차지 → 홈 씬 풀블리드 */
 .app-main { flex: 1; overflow-y: auto; position: relative; }
 .screen { min-height: 100%; position: relative; }
-/* 홈은 스크롤 없이 뷰포트를 꽉 채움 */
-.mine-home { position: absolute; inset: 0; overflow: hidden; }
+/* 홈은 스크롤 없이 뷰포트를 꽉 채움. overflow:hidden 제거 — gm-plate-area가 자체 클립 */
+.mine-home { position: absolute; inset: 0; }
 
 /* ---------- 광산 씬 (풀블리드) ---------- */
 .mine-scene { position: absolute; inset: 0; z-index: 0; overflow: hidden; background: #0c0a07; }
@@ -385,14 +389,62 @@ body {
 .sni-title { font-size: 0.85rem; color: var(--text); line-height: 1.4; margin-bottom: 4px; }
 .sni-meta { font-size: 0.72rem; color: var(--text-dim); }
 
-/* ---------- 뉴스 화면 ---------- */
-.news-body { display: flex; flex-direction: column; gap: 10px; padding-bottom: 8px; }
+/* ---------- 뉴스 화면 (스크롤 없는 고정 앱 화면) ---------- */
+.news-screen {
+  height: 100%;
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+.news-body {
+  flex: 1; min-height: 0;
+  display: flex; flex-direction: column; gap: 10px;
+  overflow: hidden;
+  padding: 12px 16px;
+  padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+}
+/* 레이더·제목은 고정 높이, 뉴스 트랙만 남은 공간 차지 */
+.news-body > .radar-panel,
+.news-body > .feed-section-title,
+.news-body > .news-dots,
+.news-body > .disclaimer-line { flex: none; }
 .news-list { display: flex; flex-direction: column; gap: 10px; }
+/* 뉴스 4개씩 가로 스크롤 캐러셀 (레이더와 동일 패턴) */
+.news-track {
+  flex: 1; min-height: 0;
+  display: flex;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.news-track::-webkit-scrollbar { display: none; }
+.news-page {
+  flex: 0 0 100%;
+  height: 100%;
+  scroll-snap-align: start;
+  display: flex; flex-direction: column; gap: 10px;
+  padding: 0 1px;
+}
 .news-card {
   display: block; text-decoration: none; color: inherit;
   background: var(--card, rgba(20,16,11,.55)); border: 1px solid var(--line);
   border-radius: 12px; padding: 12px 14px;
 }
+/* 캐러셀 카드: 페이지 높이를 균등 분할 → 4개가 항상 화면에 딱 맞음 */
+.news-page .news-card {
+  flex: 1 1 0; min-height: 0;
+  display: flex; flex-direction: column; justify-content: flex-start;
+  overflow: hidden;
+  padding: 9px 13px;
+}
+.news-page .news-card-top { margin-bottom: 4px; }
+.news-page .news-title {
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: 13.5px; line-height: 1.35;
+}
+.news-page .news-press { margin-top: 3px; }
 .news-card:active { background: rgba(232,179,57,.08); }
 .news-card-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
 .news-stock-tag {
@@ -1278,10 +1330,26 @@ body {
 }
 .radar-header {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 6px;
   margin-bottom: 8px;
   padding: 0 2px;
+}
+/* 페이지 점 인디케이터 (6개 초과 시 스와이프) */
+.radar-dots {
+  display: flex; justify-content: center; align-items: center; gap: 7px;
+  margin-top: 10px;
+}
+/* 뉴스 점은 제목 밑·카드 위 — 항상 보이게 */
+.news-dots { margin-top: 2px; margin-bottom: 10px; }
+.radar-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: rgba(232,179,57,.28);
+  cursor: pointer; transition: background .2s, transform .2s;
+}
+.radar-dot.active {
+  background: var(--gold-bright);
+  transform: scale(1.3);
 }
 .radar-title {
   font-size: 13px;
@@ -1296,6 +1364,24 @@ body {
 .radar-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
+  gap: 7px;
+}
+/* 가로 스크롤 캐러셀 — 카드 위에서도 가로 스와이프가 페이지를 넘김 */
+.radar-track {
+  display: flex;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.radar-track::-webkit-scrollbar { display: none; }
+.radar-page {
+  flex: 0 0 100%;
+  scroll-snap-align: start;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-auto-rows: 52px;
   gap: 7px;
 }
 .radar-card {
@@ -1644,12 +1730,31 @@ body {
 
 /* ── 하단: 연속방문 + disclaimer ── */
 .home-bottom {
-  position: absolute; left: 0; right: 0;
-  bottom: calc(56px + env(safe-area-inset-bottom, 0px)); z-index: 6;
+  position: fixed; left: 0; right: 0;
+  bottom: calc(72px + env(safe-area-inset-bottom, 0px)); z-index: 6;
   display: flex; flex-direction: column; align-items: center; gap: 5px;
   padding: 10px 16px 8px;
   background: linear-gradient(0deg, rgba(12,8,4,.9) 0%, rgba(12,8,4,.5) 65%, rgba(12,8,4,0) 100%);
   pointer-events: none;
+}
+.gm-page-dots {
+  display: flex; align-items: center; gap: 9px;
+  padding: 7px 14px;
+  background: rgba(10,7,4,.72);
+  border: 1px solid rgba(255,195,50,.22);
+  border-radius: 20px;
+  pointer-events: auto;
+}
+.gm-page-dot {
+  width: 9px; height: 9px; border-radius: 50%;
+  background: rgba(255,200,60,.32);
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+}
+.gm-page-dot.active {
+  background: #ffc832;
+  transform: scale(1.3);
+  box-shadow: 0 0 7px 2px rgba(255,200,50,.75);
 }
 .home-streak {
   display: inline-flex; align-items: center; gap: 6px;
@@ -1854,22 +1959,46 @@ body {
 }
 .gm-outer.gm-dimmed { filter: grayscale(0.7) brightness(0.45); }
 
-/* plate 표시 영역 — 헤더 아래(topOffset) ~ 독 위. flex center로 세로 대칭 크롭 */
+/* plate 표시 영역 — 헤더 아래(topOffset)부터 도크 위까지 */
 .gm-plate-area {
   position: absolute; left: 0; right: 0;
-  bottom: calc(56px + env(safe-area-inset-bottom, 0px));
+  bottom: calc(62px + env(safe-area-inset-bottom, 0px));
   /* top: topOffset — GwangmaekScene inline style로 주입 */
-  display: flex; justify-content: center; align-items: center;
+  background: #0c0a07;
+  display: flex; justify-content: center; align-items: flex-start;
   overflow: hidden;
 }
+/* 상단 페이드 */
+.gm-plate-area::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 60px;
+  background: linear-gradient(to bottom, #0c0a07 0%, transparent 100%);
+  pointer-events: none; z-index: 3;
+}
+/* 하단 페이드 */
+.gm-plate-area::after {
+  content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 80px;
+  background: linear-gradient(to top, #0c0a07 0%, transparent 100%);
+  pointer-events: none; z-index: 3;
+}
 
-/* plate wrapper — 이미지 비율 고정(941:1672). 가로=100%, 세로는 비율로 결정.
-   컨테이너보다 높으면 위아래 대칭 크롭 → C1~C4 모두 보임. */
+/* 좌우 letterbox 배경 — 같은 mine 이미지 블러·다크 처리로 경계 제거 */
+.gm-bg-blur {
+  position: absolute; inset: 0;
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  filter: blur(18px) brightness(0.18);
+  transform: scale(1.12);
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* plate wrapper — 세로 100% 꽉차게, 비율로 가로 결정 → 4층 전부 표시 보장 */
 .gm-plate-wrap {
   position: relative;
-  width: 100%;
+  height: 100%;
   aspect-ratio: 941 / 1672;
   flex-shrink: 0;
+  z-index: 1;
 }
 
 /* 배경 이미지 — wrapper 비율이 이미지 비율과 같으므로 fill = 왜곡 없음 */
@@ -1885,6 +2014,7 @@ body {
   position: absolute;
   transform: translateX(-50%);
   pointer-events: none;
+  z-index: 4;
 }
 .gm-miner-img {
   height: 100%; width: auto; display: block;
@@ -1919,25 +2049,31 @@ body {
   50%       { transform: rotate(5deg)  translateX(5px); }
 }
 
-/* ── 챔버 종목 라벨 칩 ── */
-.gm-chip {
+/* ── 광부 머리 위 라벨 (박스 없는 세리프, §94-99) ── */
+.gm-label {
   position: absolute;
-  display: flex; flex-direction: column; gap: 1px;
-  background: rgba(0,0,0,0.60);
-  border: 1px solid rgba(232,179,57,0.65);
-  border-radius: 10px;
-  padding: 5px 9px;
+  display: flex; flex-direction: column; align-items: center; gap: 1px;
   pointer-events: none;
-  backdrop-filter: blur(5px);
-  -webkit-backdrop-filter: blur(5px);
-  max-width: 46%;
+  white-space: nowrap;
+  z-index: 5;
 }
-.gm-chip-name {
-  font-size: 13px; font-weight: 700; color: #f3e9d6;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+.gm-label-name {
+  font-family: Georgia, 'Nanum Myeongjo', 'Times New Roman', serif;
+  font-size: 14px; font-weight: 600;
+  color: #efe2c8;
+  letter-spacing: 0.01em;
+  max-width: 110px; overflow: hidden; text-overflow: ellipsis;
+  /* 글자 뒤 soft radial shadow — 박스 대체 */
+  text-shadow: 0 0 7px rgba(0,0,0,0.95), 0 0 14px rgba(0,0,0,0.85), 0 1px 2px rgba(0,0,0,1);
 }
-.gm-chip-rate { font-size: 15px; font-weight: 800; line-height: 1.25; }
-.gm-chip-amt  { font-size: 11px; color: rgba(243,233,214,0.72); }
+.gm-label-rate {
+  display: inline-flex; align-items: center; gap: 3px;
+  font-size: 12px; font-weight: 700; line-height: 1.2;
+  text-shadow: 0 0 6px rgba(0,0,0,0.95), 0 1px 2px rgba(0,0,0,1);
+}
+.gm-label-rate[data-dir="up"]   { color: #8fc9a6; }  /* 채도 낮춘 초록 */
+.gm-label-rate[data-dir="down"] { color: #d39a9a; }  /* 채도 낮춘 빨강 */
+.gm-label-gem { font-size: 8px; transform: translateY(-0.5px); opacity: 0.9; }
 
 /* ── 금맥 발광 펄스 ── */
 .gm-vein-glow {
@@ -1996,3 +2132,204 @@ body {
   80%  { opacity: 0.4; }
   100% { transform: translateY(-30px) scale(0.4); opacity: 0;   }
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   홈 줌아웃 — 다층 수직 갱도 조망 (MineOverview, C안) — 2026-06-24
+   ═══════════════════════════════════════════════════════════════ */
+.mo-outer {
+  position: absolute; left: 0; right: 0;
+  bottom: calc(62px + env(safe-area-inset-bottom, 0px));
+  /* top: topOffset — inline */
+  background: #0c0a07;
+  overflow: hidden;
+  z-index: 0;
+}
+.mo-scroll {
+  height: 100%;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 18px 14px 28px;
+  scrollbar-width: none;
+}
+.mo-scroll::-webkit-scrollbar { display: none; }
+
+.mo-floor-block { position: relative; }
+
+.mo-floor {
+  position: relative;
+  padding: 8px 0 4px;
+  /* depth haze — 아래 층일수록 어두워짐 (최대 0.5) */
+}
+.mo-floor::after {
+  content: ''; position: absolute; inset: -4px;
+  background: #07050300;
+  /* depth haze 아주 옅게 — 깊이 힌트만, 검은 면적 최소화 */
+  background: rgba(6,4,2, min(0.22, calc(var(--depth, 0) * 0.08)));
+  pointer-events: none;
+  z-index: 3;
+  transition: background 0.3s;
+}
+.mo-floor-label {
+  display: block;
+  font-size: 11px; font-weight: 700;
+  color: rgba(232,179,57,0.6);
+  letter-spacing: 0.05em;
+  margin: 0 0 6px 4px;
+}
+
+.mo-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+/* 지그재그 — 오른쪽 열을 살짝 내림 */
+.mo-grid > *:nth-child(even) { margin-top: 22px; }
+
+.mo-cell {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  border-radius: 14px;
+  border: 1px solid rgba(232,179,57,0.3);
+  background: #0a0704;
+  overflow: hidden;
+  cursor: pointer;
+  padding: 0;
+  display: block;
+  box-shadow: inset 0 0 24px rgba(0,0,0,0.55);
+}
+/* 광굴 배경 이미지 — 셀을 꽉 채움 (잘라낸 동굴 방) */
+.mo-chamber {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  filter: brightness(0.9);
+  pointer-events: none;
+  z-index: 0;
+}
+.mo-cell-empty {
+  border-color: rgba(120,100,70,0.1);
+  background: rgba(8,6,3,0.95);
+  box-shadow: none;
+  cursor: default;
+}
+
+.mo-glow {
+  position: absolute;
+  left: 50%; top: 44%;
+  width: 60%; height: 46%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(255,222,110,0.6) 0%, rgba(255,170,40,0.26) 45%, transparent 72%);
+  filter: blur(5px);
+  animation: gmVeinPulse 3s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 1;
+}
+/* 일꾼 — 중앙 정렬 wrapper + img에 애니메이션 (줌인과 동일 구조) */
+.mo-miner-wrap {
+  position: absolute;
+  left: 50%; bottom: 7%;
+  height: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+  z-index: 2;
+}
+.mo-miner {
+  height: 100%; width: auto; display: block;
+  /* 실제 일꾼 이미지 그대로 — 살짝만 톤다운해 광방과 어우러지게 */
+  filter: brightness(0.92) drop-shadow(0 3px 7px rgba(0,0,0,0.7));
+  transform-origin: bottom center;
+}
+/* 셀 내부 떠다니는 금 먼지 */
+.mo-dust {
+  position: absolute;
+  width: 2px; height: 2px; border-radius: 50%;
+  background: rgba(255,228,130,0.85);
+  box-shadow: 0 0 3px rgba(255,205,80,0.7);
+  pointer-events: none; z-index: 3;
+  animation: gmDustRise linear infinite;
+}
+.mo-label {
+  position: absolute;
+  left: 8px; top: 7px;
+  display: flex; flex-direction: column; gap: 0;
+  z-index: 4;
+  pointer-events: none;
+  max-width: calc(100% - 16px);
+}
+.mo-label-name {
+  font-family: Georgia, 'Nanum Myeongjo', 'Times New Roman', serif;
+  font-size: 12px; font-weight: 600; color: #efe2c8;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  text-shadow: 0 0 6px rgba(0,0,0,0.95), 0 1px 2px rgba(0,0,0,1);
+}
+.mo-label-rate {
+  display: inline-flex; align-items: center; gap: 3px;
+  font-size: 11px; font-weight: 700;
+  text-shadow: 0 0 5px rgba(0,0,0,0.95), 0 1px 2px rgba(0,0,0,1);
+}
+.mo-label-rate[data-dir="up"]   { color: #8fc9a6; }
+.mo-label-rate[data-dir="down"] { color: #d39a9a; }
+.mo-gem { font-size: 7px; transform: translateY(-0.5px); opacity: 0.9; }
+
+/* 층 사이 수직 갱도 연결부 — 사다리(두 레일 + 가로 발판) */
+.mo-shaft {
+  position: relative;
+  height: 38px; margin: 3px 0;
+}
+.mo-shaft::before {
+  /* 두 세로 레일 */
+  content: ''; position: absolute;
+  left: 50%; top: 0; bottom: 0;
+  width: 14px; transform: translateX(-50%);
+  border-left: 2px solid rgba(180,140,70,0.38);
+  border-right: 2px solid rgba(180,140,70,0.38);
+  box-sizing: border-box;
+}
+.mo-shaft::after {
+  /* 가로 발판 (반복 그라데이션) */
+  content: ''; position: absolute;
+  left: 50%; top: 0; bottom: 0;
+  width: 14px; transform: translateX(-50%);
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(180,140,70,0.40) 0 2px,
+    transparent 2px 9px
+  );
+}
+
+/* ── 줌 뷰 래퍼 + 진입 전환 애니메이션 ── */
+.zoom-view {
+  position: absolute; inset: 0;
+  transform-origin: center center;
+}
+/* 줌인 진입: 층 안으로 들어가는 느낌 (작게→정상) */
+.zoom-view.zoom-detail { animation: zoomEnterIn 0.32s cubic-bezier(.22,.7,.3,1); }
+/* 줌아웃 진입: 뒤로 빠지는 느낌 (살짝 크게→정상) */
+.zoom-view.zoom-overview { animation: zoomEnterOut 0.32s cubic-bezier(.22,.7,.3,1); }
+@keyframes zoomEnterIn {
+  0%   { opacity: 0; transform: scale(0.90); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes zoomEnterOut {
+  0%   { opacity: 0; transform: scale(1.08); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+/* ── 우상단 줌 토글 버튼 ── */
+.zoom-toggle {
+  position: fixed;
+  right: 12px;
+  z-index: 8;
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 7px 12px;
+  background: rgba(12,9,5,0.78);
+  border: 1px solid rgba(232,179,57,0.4);
+  border-radius: 999px;
+  color: var(--gold-bright);
+  font-size: 12px; font-weight: 700;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  pointer-events: auto;
+}
+.zoom-toggle-icon { font-size: 14px; line-height: 1; }

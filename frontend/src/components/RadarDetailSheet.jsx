@@ -15,6 +15,8 @@ function fmtShares(val) {
 export default function RadarDetailSheet({ event, onClose }) {
   const isSupply = event.type === 'supply_buy' || event.type === 'supply_sell'
   const isScore  = event.type === 'score_up'  || event.type === 'score_dn'
+  const isQuiet  = event.type === 'quiet'
+  const wantNews = isSupply || isQuiet  // 종목 카드면 뉴스 노출
   const [news, setNews]     = useState(null)
   const [loading, setLoading] = useState(false)
 
@@ -25,13 +27,13 @@ export default function RadarDetailSheet({ event, onClose }) {
   }, [])
 
   useEffect(() => {
-    if (!isSupply) return
+    if (!wantNews) return
     setLoading(true)
     api.newsForTicker('KR', event.ticker)
       .then(d => setNews(d.items || []))
       .catch(() => setNews([]))
       .finally(() => setLoading(false))
-  }, [event.ticker, isSupply])
+  }, [event.ticker, wantNews])
 
   const foreign = event.detail?.foreign ?? 0
   const inst    = event.detail?.inst    ?? 0
@@ -90,7 +92,13 @@ export default function RadarDetailSheet({ event, onClose }) {
           </>
         )}
 
-        {isSupply && (
+        {isQuiet && (
+          <div className="sds-note" style={{ marginTop: 4 }}>
+            오늘 외국인·기관 순매수 변동이 두드러지지 않았어요 · 수급 데이터는 지연될 수 있습니다
+          </div>
+        )}
+
+        {wantNews && (
           <div className="sds-news">
             {loading && <div className="sds-news-loading">뉴스 불러오는 중…</div>}
             {!loading && news?.length === 0 && (

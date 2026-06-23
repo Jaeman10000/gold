@@ -50,8 +50,8 @@ def get_news(market: str = "KR", ticker: str | None = None) -> dict:
         return {**cached[0], "market": market, "cachedAt": cached[1]}
 
     collected: list[dict] = []
-    for h in holdings[:8]:  # 과도한 외부 호출 방지
-        collected.extend(naver_news.get_stock_news(h["ticker"], h["name"], limit=2))
+    for h in holdings:
+        collected.extend(naver_news.get_stock_news(h["ticker"], h["name"], limit=3))
 
     # 최신순 정렬 + URL 중복 제거
     seen: set[str] = set()
@@ -63,7 +63,7 @@ def get_news(market: str = "KR", ticker: str | None = None) -> dict:
         uniq.append(n)
 
     result = {
-        "items": uniq[:6],
+        "items": uniq,
         "holdingsCount": len(holdings),
         "note": "보유 종목명 기준 네이버 증권 뉴스",
         "disclaimer": _DISCLAIMER,

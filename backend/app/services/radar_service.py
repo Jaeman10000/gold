@@ -164,7 +164,7 @@ def _fresh(cached_at: str) -> bool:
 def build_radar(market: str) -> dict:
     """레이더 이벤트 빌드 + 30분 캐시.
 
-    수급 이벤트 우선 → 점수변화 후순위. 최대 6개.
+    수급 이벤트 우선 → 점수변화 후순위. 최대 12개(프론트 6개씩 스와이프).
     이벤트 없으면 events=[] → 프론트에서 패널 숨김.
     """
     key = f"radar:{market}"
@@ -186,7 +186,25 @@ def build_radar(market: str) -> dict:
     finally:
         db.close()
 
-    events = (supply_evts + score_evts)[:6]
+    notable = supply_evts + score_evts
+
+    # 변동 두드러지지 않은 보유 종목도 중립 카드로 포함 — "내 종목 전부" 보이게.
+    # 하드룰 §12: 권유 표현 0개, 사실만.
+    covered = {ev["ticker"] for ev in notable}
+    quiet_evts = [
+        {
+            "type":   "quiet",
+            "emoji":  "⚪",
+            "ticker": tk,
+            "name":   name,
+            "text":   "오늘 수급 조용",
+            "detail": {"foreign": 0, "inst": 0},
+        }
+        for tk, name in names.items()
+        if tk not in covered
+    ]
+
+    events = (notable + quiet_evts)[:12]
     result = {
         "events":     events,
         "disclaimer": _DISCLAIMER,

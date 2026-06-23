@@ -5,6 +5,10 @@ import miner1Carry   from '@assets/scene/new/miner_1_carry.png'
 import miner2Sawing  from '@assets/scene/new/miner_2_sawing.png'
 import miner3Sorting from '@assets/scene/new/miner_3_sorting.png'
 import miner4Pickaxe from '@assets/scene/new/miner_4_pickaxe.png'
+import chamber1 from '@assets/scene/new/chambers/chamber_1.png'
+import chamber2 from '@assets/scene/new/chambers/chamber_2.png'
+import chamber3 from '@assets/scene/new/chambers/chamber_3.png'
+import chamber4 from '@assets/scene/new/chambers/chamber_4.png'
 import veinGold from '@assets/scene/vein_gold.png'
 import cartFull from '@assets/scene/cart_full.png'   // 기본
 import cartEmpty from '@assets/scene/cart_empty.png'  // 수확 후
@@ -58,6 +62,8 @@ export const scene = {
 export const gwangmaek = {
   plate: gwangmaekPlate,
   miners: [miner1Carry, miner2Sawing, miner3Sorting, miner4Pickaxe],
+  // 플레이트에서 잘라낸 개별 광굴 4종 (줌아웃 격자 셀 배경)
+  chambers: [chamber1, chamber2, chamber3, chamber4],
 }
 
 export const emblems = {

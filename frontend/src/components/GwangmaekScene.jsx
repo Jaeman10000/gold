@@ -1,7 +1,6 @@
 // 홈 광산 단면 씬 — gwangmaek_plate_clean.png + 일꾼 4명 + 코드 FX
 // plate는 독 바로 위에 하단 고정. 챔버2~4 항상 표시, 챔버1은 헤더 뒤로 확장.
 // CLAUDE.md §5: 발광·움직임은 앰비언트 연출만. 매수/매도 추천 금지.
-import { profitColor } from '../utils/format'
 import { gwangmaek } from '../assets'
 
 // ── 일꾼 배치 (plate % 기준, 발-중앙 앵커) ─────────────────────────────
@@ -13,15 +12,7 @@ const MINERS = [
   { cx: 0.500, footY: 0.865, hFrac: 0.072, anim: 'gm-anim-pick' }, // C4: 곡괭이
 ]
 
-// ── 챔버 라벨칩 위치 (챔버별 바위벽 공간)
-// 플레이트 가로 = 화면 가로 (CSS cover, 오버플로우 없음) → left/right 5% 사용 가능.
-// 일꾼과 반대쪽 바위벽 배치: C1·C3 왼쪽, C2·C4 오른쪽.
-const CHIP_POS = [
-  { left: '5%',  top: '14%' }, // C1: footY 0.205
-  { right: '5%', top: '40%' }, // C2: footY 0.470
-  { left: '5%',  top: '63%' }, // C3: footY 0.715
-  { right: '5%', top: '77%' }, // C4: footY 0.865
-]
+// 칩 위치는 MINERS 좌표에서 동적 계산 — 광부 머리 바로 위 중앙
 
 // ── 금맥 발광 중심점 (챔버별 광맥 위치 추정) ───────────────────────────
 const VEIN_GLOWS = [
@@ -55,24 +46,17 @@ const DUST = [
   { l: 0.50, t: 0.89, dur: 3.0, delay: 0.5 },
 ]
 
-// 칩용 평가금액 축약 (로컬 헬퍼)
-function compactAmt(market, v) {
-  if (v == null || v === 0) return ''
-  if (market === 'US') {
-    if (v >= 1e6) return `$${(v / 1e6).toFixed(1)}M`
-    if (v >= 1e3) return `$${(v / 1e3).toFixed(1)}K`
-    return `$${Math.round(v)}`
-  }
-  if (v >= 1e8) return `₩${(v / 1e8).toFixed(1)}억`
-  if (v >= 1e4) return `₩${Math.round(v / 1e4)}만`
-  return `₩${Math.round(v).toLocaleString()}`
-}
 
-export default function GwangmaekScene({ top4 = [], market = 'KR', topOffset = 210, dimmed = false }) {
+export default function GwangmaekScene({ floorStocks = [], topOffset = 210, dimmed = false }) {
+  // 항상 4칸, 빈 자리는 null (빈 챔버 = 일꾼·라벨 숨김)
+  const chambers = Array.from({ length: 4 }, (_, i) => floorStocks[i] || null)
+
   return (
     <div className={`gm-outer${dimmed ? ' gm-dimmed' : ''}`} aria-hidden="true">
-      {/* plate 영역 — 헤더 아래 시작 (topOffset), CSS cover로 레터박스 없음 */}
+      {/* plate 영역 — 헤더 아래 시작 (topOffset) */}
       <div className="gm-plate-area" style={{ top: topOffset }}>
+        {/* 좌우 letterbox: 같은 이미지 블러·다크로 깔아서 경계 제거 */}
+        <div className="gm-bg-blur" style={{ backgroundImage: `url(${gwangmaek.plate})` }} />
         <div className="gm-plate-wrap">
 
           {/* L0: 배경 plate */}
@@ -122,41 +106,48 @@ export default function GwangmaekScene({ top4 = [], market = 'KR', topOffset = 2
             ))}
           </div>
 
-          {/* L4: 일꾼 4명 (발-중앙 앵커로 % 배치) */}
+          {/* L4: 일꾼 — 빈 챔버는 숨김 */}
           {MINERS.map((m, i) => (
-            <div
-              key={`mn${i}`}
-              className="gm-miner-pos"
-              style={{
-                left: `${m.cx * 100}%`,
-                top: `${(m.footY - m.hFrac) * 100}%`,
-                height: `${m.hFrac * 100}%`,
-              }}
-            >
-              <img
-                className={`gm-miner-img ${m.anim}`}
-                src={gwangmaek.miners[i]}
-                alt=""
-                draggable="false"
-              />
-            </div>
+            chambers[i] ? (
+              <div
+                key={`mn${i}`}
+                className="gm-miner-pos"
+                style={{
+                  left: `${m.cx * 100}%`,
+                  top: `${(m.footY - m.hFrac) * 100}%`,
+                  height: `${m.hFrac * 100}%`,
+                }}
+              >
+                <img
+                  className={`gm-miner-img ${m.anim}`}
+                  src={gwangmaek.miners[i]}
+                  alt=""
+                  draggable="false"
+                />
+              </div>
+            ) : null
           ))}
 
-          {/* L5: 챔버 종목 라벨칩 */}
-          {MINERS.map((_, i) => {
-            const stock = top4[i]
+          {/* L5: 광부 머리 위 라벨 — 박스 없는 세리프(§94-99). 빈 챔버는 숨김 */}
+          {chambers.map((stock, i) => {
             if (!stock) return null
+            const m = MINERS[i]
             const up = stock.returnRate >= 0
             return (
-              <div key={`chip${i}`} className="gm-chip" style={CHIP_POS[i]}>
-                <span className="gm-chip-name">{stock.name}</span>
-                <span
-                  className="gm-chip-rate"
-                  style={{ color: profitColor(stock.returnRate) }}
-                >
-                  {up ? '▲' : '▼'} {Math.abs(stock.returnRate).toFixed(1)}%
+              <div
+                key={`label${i}`}
+                className="gm-label"
+                style={{
+                  left: `${m.cx * 100}%`,
+                  top: `${(m.footY - m.hFrac) * 100}%`,
+                  transform: 'translate(-50%, calc(-100% - 5px))',
+                }}
+              >
+                <span className="gm-label-name">{stock.name}</span>
+                <span className="gm-label-rate" data-dir={up ? 'up' : 'down'}>
+                  <span className="gm-label-gem">◆</span>
+                  {Math.abs(stock.returnRate).toFixed(1)}%
                 </span>
-                <span className="gm-chip-amt">{compactAmt(market, stock.evalAmount)}</span>
               </div>
             )
           })}
