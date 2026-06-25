@@ -11,6 +11,7 @@ import MineOverview from '../components/MineOverview'
 import Hud from '../components/Hud'
 import AssetSummary from '../components/AssetSummary'
 import HoldingsSheet from '../components/HoldingsSheet'
+import MinerCardSheet from '../components/MinerCardSheet'
 import LockedOverlay from '../components/LockedOverlay'
 import LoadingMascot from '../components/LoadingMascot'
 import RestoreReveal from '../components/RestoreReveal'
@@ -22,6 +23,7 @@ export default function MineHome() {
   const { data, loading, refreshing, error, cachedAt } = useScreenData('portfolio', market)
   const { refresh, levelData } = useDataStore()
   const [sheetOpen, setSheetOpen] = useState(false)
+  const [cardOpen, setCardOpen] = useState(false)
   const [highlights, setHighlights] = useState(null)
   const [visitStreak, setVisitStreak] = useState(null)
 
@@ -124,6 +126,7 @@ export default function MineHome() {
               levelData={levelData}
               onSync={() => refresh(market)}
               cachedAt={cachedAt}
+              onCardOpen={() => setCardOpen(true)}
             />
             <AssetSummary
               data={data}
@@ -159,6 +162,11 @@ export default function MineHome() {
             onClose={() => setSheetOpen(false)}
             holdings={data.holdings}
             market={data.market}
+          />
+          <MinerCardSheet
+            open={cardOpen}
+            onClose={() => setCardOpen(false)}
+            market={market}
           />
         </>
       )}

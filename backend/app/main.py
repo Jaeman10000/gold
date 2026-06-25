@@ -11,6 +11,7 @@ from fastapi.responses import JSONResponse
 from app.config import settings
 from app.db import init_db
 from app.routers import (
+    card,
     explore,
     highlights,
     import_router,
@@ -60,6 +61,7 @@ app.add_middleware(
     allow_headers=["*", "X-Passcode"],
 )
 
+app.include_router(card.router)
 app.include_router(portfolio.router)
 app.include_router(vault.router)
 app.include_router(survey.router)

@@ -51,5 +51,6 @@ export const api = {
   highlights:      (market) => get(`/highlights?market=${market}`),
   radar:           (market) => get(`/radar?market=${market}`),
   visitStreak:     () => get('/visit/streak'),
+  card:            (market) => get(`/card?market=${market}`),
   upload,
 }

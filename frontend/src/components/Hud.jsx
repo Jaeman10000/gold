@@ -4,7 +4,7 @@
 // (총 평가금액·수익률은 AssetSummary로, 연속방문은 하단으로 분리 — 씬이 주인공)
 import { syncTime } from '../utils/format'
 
-export default function Hud({ data, refreshing, levelData, onSync, cachedAt }) {
+export default function Hud({ data, refreshing, levelData, onSync, cachedAt, onCardOpen }) {
   const { veinGrade } = data
 
   // 레벨 데이터 (없으면 기본값)
@@ -52,7 +52,11 @@ export default function Hud({ data, refreshing, levelData, onSync, cachedAt }) {
             <span className={refreshing ? 'sync-icon spinning' : 'sync-icon'}>🔄</span>
             <span className="sync-time">{refreshing ? '동기화 중…' : (syncTime(cachedAt) || '')}</span>
           </button>
-          <span className="h-icon" aria-label="알림">🔔</span>
+          {onCardOpen && (
+            <button className="card-open-btn" onClick={onCardOpen} title="광부 명함">
+              🪪
+            </button>
+          )}
           <span className="h-icon" aria-label="설정">⚙</span>
         </div>
       </div>

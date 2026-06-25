@@ -57,6 +57,30 @@ def log_and_get_streak(db: Session, user_id: str = "default") -> dict:
     }
 
 
+def get_streak_current(db: Session, user_id: str = "default") -> int:
+    """방문 로그 없이 현재 연속 방문일만 조회."""
+    today = date.today()
+    visits: list[str] = [
+        v.date for v in db.query(VisitLog)
+        .filter_by(user_id=user_id)
+        .order_by(VisitLog.date.desc())
+        .limit(400)
+    ]
+    if not visits:
+        return 0
+    streak = 0
+    check = today
+    for v in visits:
+        v_date = date(int(v[:4]), int(v[4:6]), int(v[6:8]))
+        diff = (check - v_date).days
+        if diff == 0 or diff == 1:
+            streak += 1
+            check = v_date
+        else:
+            break
+    return streak
+
+
 def _get_message(streak: int, days_since_last: int | None, is_first: bool) -> str:
     if is_first:
         return "오늘 광맥 첫 방문이에요. 투자 습관의 시작입니다."
