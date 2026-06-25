@@ -1547,13 +1547,16 @@ body {
   line-height: 1.15;
   text-align: right;
 }
-.ssr-bar-track {
+.ssr-bar-wrap {
   grid-column: 1 / -1;
   grid-row: 2;
+  position: relative;
+  margin: 4px 0 2px;
+}
+.ssr-bar-track {
   height: 3px;
   background: rgba(232,179,57,.12);
   border-radius: 2px;
-  margin: 4px 0 2px;
   overflow: hidden;
 }
 .ssr-bar-fill {
@@ -1561,6 +1564,42 @@ body {
   background: rgba(232,179,57,.45);
   border-radius: 2px;
   transition: width .4s ease;
+}
+.ssr-bar-tick {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 1.5px;
+  height: 9px;
+  background: rgba(255,255,255,.35);
+  border-radius: 1px;
+  pointer-events: none;
+}
+
+/* ── 참고 기준 칩 ── */
+.ssr-benchmarks {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  margin-top: 7px;
+}
+.ssr-bench-hd {
+  font-size: 9.5px;
+  color: var(--text-dim);
+  opacity: .55;
+  margin-right: 2px;
+  flex-shrink: 0;
+}
+.ssr-bench-chip {
+  font-size: 9.5px;
+  color: rgba(232,179,57,.75);
+  background: rgba(232,179,57,.07);
+  border: 1px solid rgba(232,179,57,.18);
+  border-radius: 10px;
+  padding: 2px 7px;
+  line-height: 1.4;
 }
 .ssr-desc {
   grid-column: 1 / -1;

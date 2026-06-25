@@ -19,11 +19,10 @@ function fmtOgukWon(v) {
 }
 
 // ── 개별 수치 행 ──────────────────────────────────────────────────────────────
-// 숫자=주인공(금색 크게), bar=보조(얇은 액센트)
-// meaning: 이 숫자가 무엇을 뜻하는지 평어 설명
-// formula: 산출 방식 (더 작고 흐림)
+// benchmarks: [{ chip: '워렌버핏 기준 10배 이하', at: 10 }, ...]
+//   chip = 칩 텍스트, at = 바 위 틱 마크 위치(barCeil 단위, 선택)
 
-function StatRow({ label, value, unit = '', meaning, formula, barCeil }) {
+function StatRow({ label, value, unit = '', meaning, formula, barCeil, benchmarks }) {
   if (value === null || value === undefined) {
     return (
       <div className="ssr">
@@ -34,17 +33,35 @@ function StatRow({ label, value, unit = '', meaning, formula, barCeil }) {
     )
   }
   const pct = barCeil ? Math.min(Math.max(value, 0) / barCeil * 100, 100) : 0
+  const ticks = benchmarks?.filter(b => b.at !== undefined && barCeil) || []
 
   return (
     <div className="ssr">
       <div className="ssr-label">{label}</div>
       <div className="ssr-value">{fmtNum(value, unit === '%' ? 2 : 1)}{unit}</div>
       {barCeil !== undefined && (
-        <div className="ssr-bar-track">
-          <div className="ssr-bar-fill" style={{ width: `${pct}%` }} />
+        <div className="ssr-bar-wrap">
+          <div className="ssr-bar-track">
+            <div className="ssr-bar-fill" style={{ width: `${pct}%` }} />
+          </div>
+          {ticks.map((b, i) => (
+            <div
+              key={i}
+              className="ssr-bar-tick"
+              style={{ left: `${Math.min(b.at / barCeil * 100, 100)}%` }}
+            />
+          ))}
         </div>
       )}
       {meaning  && <div className="ssr-meaning">{meaning}</div>}
+      {benchmarks?.length > 0 && (
+        <div className="ssr-benchmarks">
+          <span className="ssr-bench-hd">참고 기준</span>
+          {benchmarks.map((b, i) => (
+            <span key={i} className="ssr-bench-chip">{b.chip}</span>
+          ))}
+        </div>
+      )}
       {formula  && <div className="ssr-formula">산출: {formula}</div>}
     </div>
   )
@@ -189,6 +206,10 @@ export default function StockStudyCard({ ticker, name, market }) {
           meaning="매출 100원을 팔았을 때 본업(영업활동)으로 실제 얼마가 남는지의 비율. 회사가 장사를 해서 얼마나 버는지 보여줌."
           formula="영업이익 ÷ 매출액 × 100"
           barCeil={15}
+          benchmarks={[
+            { chip: '코스피 제조업 평균 약 5%', at: 5 },
+            { chip: '10% 이상이면 수익성 높은 편으로 분류', at: 10 },
+          ]}
         />
 
         <StatRow
@@ -198,6 +219,10 @@ export default function StockStudyCard({ ticker, name, market }) {
           meaning="주주가 투자한 돈(자기자본)을 1년 동안 굴려서 순이익으로 얼마를 만들었는지. 주주 돈 활용 효율을 나타냄. 업종마다 기준이 다름."
           formula="세후 순이익 ÷ 자기자본 × 100"
           barCeil={20}
+          benchmarks={[
+            { chip: '코스피 평균 약 8%', at: 8 },
+            { chip: '워렌버핏이 선호한 기준: 15% 이상 지속', at: 15 },
+          ]}
         />
 
         <PlainRow
@@ -249,6 +274,11 @@ export default function StockStudyCard({ ticker, name, market }) {
             meaning="자기 돈 100원당 빌린 돈(부채)이 얼마나 되는지. 재무 구조가 얼마나 레버리지를 쓰는지 나타냄. 업종마다 통상적인 수준이 크게 다름."
             formula="부채총계 ÷ 자본총계 × 100"
             barCeil={300}
+            benchmarks={[
+              { chip: '보수적 기준: 100% 이하', at: 100 },
+              { chip: '한국 제조업 평균 약 150%', at: 150 },
+              { chip: '금융업은 구조상 높음 (업종 비교 필요)', },
+            ]}
           />
         ) : (
           <div className="study-na-msg">부채비율 산출 데이터 미확보</div>
@@ -266,6 +296,12 @@ export default function StockStudyCard({ ticker, name, market }) {
           meaning="지금 주가가 연간 순이익(EPS)의 몇 배 수준인지. 현재 이익 기준으로 주가에 얼마만큼의 프리미엄이 붙어 있는지 보여줌. 성장 기대가 클수록 높게 형성되는 경향이 있으나, 업종마다 다름."
           formula="주가 ÷ 주당순이익(EPS)"
           barCeil={60}
+          benchmarks={[
+            { chip: '워렌버핏이 주목한 기준: 10배 이하', at: 10 },
+            { chip: '코스피 평균 약 12배', at: 12 },
+            { chip: '벤저민 그레이엄 선호 기준: 15배 이하', at: 15 },
+            { chip: '적자 기업은 PER 산출 불가 (N/A)' },
+          ]}
         />
 
         <StatRow
@@ -275,6 +311,11 @@ export default function StockStudyCard({ ticker, name, market }) {
           meaning="지금 주가가 회사 장부상 순자산(BPS)의 몇 배인지. 회사를 지금 문 닫고 자산을 팔면 주가 대비 얼마나 건질 수 있는지의 관계를 나타냄. 업종 특성에 따라 해석이 달라짐."
           formula="주가 ÷ 주당순자산(BPS)"
           barCeil={5}
+          benchmarks={[
+            { chip: '1배 이하: 순자산보다 낮은 주가 (청산가치 이하)', at: 1 },
+            { chip: '그레이엄 관심 기준: 1.5배 이하', at: 1.5 },
+            { chip: '코스피 평균 약 1.0배', at: 1.0 },
+          ]}
         />
 
         {v.ev !== null && v.ev !== undefined && (
